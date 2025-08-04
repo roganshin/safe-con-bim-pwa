@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Con-BIM Phase 2 - 통합 관제 대시보드</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* 헤더 */
+        .dashboard-header {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border-bottom: 2px solid #21262d;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: url('./ChatGPT Image 2025년 7월 23일 오후 09_03_23.png') center/contain no-repeat;
+            filter: brightness(1.2);
+        }
+
+        .logo-text {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #f0f6fc;
+        }
+
+        .phase-badge {
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .header-center {
+            text-align: center;
+        }
+
+        .site-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 2px;
+        }
+
+        .site-subtitle {
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #21262d;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background: #2ea043; }
+        .status-warning { background: #fb8500; }
+        .status-offline { background: #f85149; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px 30px;
+            min-height: calc(100vh - 100px);
+        }
+
+        /* 왼쪽 메인 영역 */
+        .main-content {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+        }
+
+        /* 통계 카드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: #30363d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+
+        .stat-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 8px rgba(88, 166, 255, 0.3));
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #8b949e;
+        }
+
+        .stat-change {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .change-up { color: #2ea043; }
+        .change-down { color: #f85149; }
+
+        /* 현장 모니터링 */
+        .monitoring-section {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #f0f6fc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: #21262d;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #8b949e;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: #58a6ff;
+            color: white;
+        }
+
+        /* 현장 그리드 */
+        .site-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .site-card {
+            background: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .site-card:hover {
+            border-color: #58a6ff;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.15);
+        }
+
+        .site-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .site-name {
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .site-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-safe {
+            background: #2ea043;
+            color: white;
+        }
+
+        .status-warning {
+            background: #fb8500;
+            color: white;
+        }
+
+        .status-danger {
+            background: #f85149;
+            color: white;
+        }
+
+        .sensor-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sensor-item {
+            background: #161b22;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .sensor-value {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .sensor-label {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .workers-count {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px;
+            background: #161b22;
+            border-radius: 8px;
+        }
+
+        /* 오른쪽 사이드바 */
+        .sidebar {
+            display: grid;
+            grid-template-rows: auto auto auto auto 1fr;
+            gap: 20px;
+        }
+
+        /* AI 위험 예측 */
+        .ai-prediction {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .prediction-item {
+            background: #21262d;
+            border-left: 4px solid;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .prediction-critical {
+            border-left-color: #f85149;
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .prediction-warning {
+            border-left-color: #fb8500;
+            background: rgba(251, 133, 0, 0.1);
+        }
+
+        .prediction-info {
+            border-left-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .prediction-title {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .prediction-probability {
+            font-size: 0.8em;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .prediction-description {
+            font-size: 0.85em;
+            color: #c9d1d9;
+            line-height: 1.4;
+        }
+
+        /* 실시간 알림 */
+        .live-alerts {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .alert-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #21262d;
+            transition: all 0.2s ease;
+        }
+
+        .alert-item:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .alert-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-text {
+            font-size: 0.9em;
+            color: #f0f6fc;
+            margin-bottom: 2px;
+        }
+
+        .alert-time {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        /* 응급 상황 패널 */
+        .emergency-panel {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .emergency-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .emergency-btn {
+            background: linear-gradient(135deg, #f85149, #da3633);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .emergency-btn:hover {
+            background: linear-gradient(135deg, #ff6b6b, #f85149);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(248, 81, 73, 0.3);
+        }
+
+        .emergency-btn.stop {
+            background: linear-gradient(135deg, #6e7681, #484f58);
+        }
+
+        .emergency-contacts {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .contact-item:last-child {
+            border-bottom: none;
+        }
+
+        .contact-call {
+            background: #2ea043;
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+
+        /* 날씨 카드 */
+        .weather-card {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .weather-main {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .weather-icon {
+            font-size: 3em;
+            text-align: center;
+            filter: drop-shadow(0 0 10px rgba(88, 166, 255, 0.3));
+        }
+
+        .weather-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .weather-temp {
+            font-size: 2em;
+            font-weight: 700;
+            color: #f0f6fc;
+            margin-bottom: 5px;
+        }
+
+        .weather-condition {
+            font-size: 1em;
+            color: #8b949e;
+            margin-bottom: 5px;
+        }
+
+        .weather-feels {
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .weather-detail {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .detail-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 2px;
+        }
+
+        .detail-label {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .weather-impact {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+        }
+
+        .impact-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 8px;
+        }
+
+        .impact-level {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .impact-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .impact-low { background: #2ea043; }
+        .impact-medium { background: #fb8500; }
+        .impact-high { background: #f85149; }
+
+        .impact-text {
+            font-size: 0.85em;
+            color: #c9d1d9;
+        }
+
+        .weather-forecast {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .forecast-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 10px;
+        }
+
+        .forecast-hours {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .forecast-hour {
+            text-align: center;
+            padding: 8px 4px;
+            background: #161b22;
+            border-radius: 6px;
+        }
+
+        .forecast-time {
+            font-size: 0.7em;
+            color: #8b949e;
+            margin-bottom: 4px;
+        }
+
+        .forecast-icon {
+            font-size: 1.2em;
+            margin-bottom: 4px;
+        }
+
+        .forecast-temp {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .weather-alerts {
+            margin-top: 15px;
+        }
+
+        .weather-alert {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid #f85149;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
+
+        .weather-alert.warning {
+            background: rgba(251, 133, 0, 0.1);
+            border-color: #fb8500;
+        }
+
+        .alert-weather-text {
+            font-size: 0.85em;
+            color: #f0f6fc;
+        }
+
+        /* 체크리스트 카드 */
+        .checklist-dashboard {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .checklist-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .checklist-metric {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .checklist-number {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .checklist-label {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .checklist-completed { color: #2ea043; }
+        .checklist-pending { color: #fb8500; }
+        .checklist-critical { color: #f85149; }
+
+        .recent-checklists {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .checklist-item-dash {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #161b22;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checklist-item-dash:hover {
+            background: #1f2937;
+        }
+
+        .checklist-info {
+            flex: 1;
+        }
+
+        .checklist-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 2px;
+        }
+
+        .checklist-meta {
+            font-size: 0.7em;
+            color: #8b949e;
+        }
+
+        .checklist-status {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .status-complete {
+            background: #2ea043;
+            color: white;
+        }
+
+        .status-progress {
+            background: #fb8500;
+            color: white;
+        }
+
+        /* 작업자 리스트 모달 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #21262d;
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #21262d;
+            color: #f0f6fc;
+        }
+
+        .worker-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .worker-card {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #30363d;
+            transition: all 0.2s ease;
+        }
+
+        .worker-card:hover {
+            border-color: #58a6ff;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.15);
+        }
+
+        .worker-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .worker-avatar-modal {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+            border: 2px solid #30363d;
+        }
+
+        .worker-details {
+            flex: 1;
+        }
+
+        .worker-name-modal {
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 3px;
+        }
+
+        .worker-role-modal {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .worker-status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .worker-location {
+            font-size: 0.8em;
+            color: #c9d1d9;
+        }
+
+        .worker-status-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .status-online {
+            background: #2ea043;
+            color: white;
+        }
+
+        .status-offline {
+            background: #f85149;
+            color: white;
+        }
+
+        .status-idle {
+            background: #fb8500;
+            color: white;
+        }
+
+        /* CCTV 모달 */
+        .cctv-modal {
+            max-width: 90%;
+            width: 1200px;
+        }
+
+        .cctv-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .cctv-card {
+            background: #21262d;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #30363d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cctv-card:hover {
+            border-color: #58a6ff;
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.15);
+        }
+
+        .cctv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .cctv-title {
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .cctv-status {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+        }
+
+        .cctv-active {
+            background: #2ea043;
+            color: white;
+        }
+
+        .cctv-inactive {
+            background: #6e7681;
+            color: white;
+        }
+
+        .cctv-preview {
+            width: 100%;
+            height: 150px;
+            background: #0d1117;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .cctv-placeholder {
+            color: #6e7681;
+            text-align: center;
+        }
+
+        .cctv-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        /* 전체화면 CCTV 뷰어 */
+        .cctv-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cctv-viewer-header {
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cctv-viewer-title {
+            color: #f0f6fc;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .cctv-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .cctv-btn {
+            background: #21262d;
+            border: 1px solid #30363d;
+            color: #f0f6fc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cctv-btn:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+        }
+
+        .cctv-viewer-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .cctv-screen {
+            width: 100%;
+            max-width: 1200px;
+            height: 70vh;
+            background: #0d1117;
+            border: 2px solid #21262d;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cctv-feed {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0d1117 25%, transparent 25%), 
+                        linear-gradient(-45deg, #0d1117 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #0d1117 75%), 
+                        linear-gradient(-45deg, transparent 75%, #0d1117 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cctv-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 하단 제어 패널 */
+        .control-panel {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .control-group {
+            text-align: center;
+        }
+
+        .control-label {
+            font-size: 0.9em;
+            color: #8b949e;
+            margin-bottom: 10px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(135deg, #6cb6ff, #4184f4);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.secondary {
+            background: linear-gradient(135deg, #6e7681, #484f58);
+        }
+
+        /* 반응형 */
+                    @media (max-width: 1400px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: auto auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .site-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #21262d;
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon"></div>
+                <div class="logo-text">Safe Con-BIM</div>
+            </div>
+            <div class="phase-badge">Phase 2 - IoT 통합관제</div>
+        </div>
+        <div class="header-center">
+            <div class="site-title">서울 강남구 테헤란로 건설현장</div>
+            <div class="site-subtitle">실시간 통합 안전관리 시스템</div>
+        </div>
+        <div class="header-right">
+            <div class="status-indicator">
+                <div class="status-dot status-online"></div>
+                <span>시스템 정상</span>
+            </div>
+            <div class="status-indicator">
+                <i class="fas fa-clock"></i>
+                <span id="current-time">14:32:15</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메인 컨테이너 -->
+    <div class="main-container">
+        <!-- 왼쪽 메인 영역 -->
+        <div class="main-content">
+            <!-- 통계 카드 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #2ea043;">👷</div>
+                    <div class="stat-value" style="color: #2ea043;" id="total-workers">47</div>
+                    <div class="stat-label">현재 작업자</div>
+                    <div class="stat-change change-up">▲ 3명 증가</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #58a6ff;">📡</div>
+                    <div class="stat-value" style="color: #58a6ff;" id="active-sensors">124</div>
+                    <div class="stat-label">활성 센서</div>
+                    <div class="stat-change change-up">▲ 98% 가동</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #fb8500;">⚠️</div>
+                    <div class="stat-value" style="color: #fb8500;" id="risk-alerts">3</div>
+                    <div class="stat-label">위험 알림</div>
+                    <div class="stat-change change-down">▼ 2건 감소</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="color: #2ea043;">🛡️</div>
+                    <div class="stat-value" style="color: #2ea043;" id="safety-score">92</div>
+                    <div class="stat-label">안전 점수</div>
+                    <div class="stat-change change-up">▲ 5점 향상</div>
+                </div>
+            </div>
+
+            <!-- 현장 모니터링 -->
+            <div class="monitoring-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-building"></i>
+                        실시간 현장 모니터링
+                    </div>
+                    <div class="view-toggle">
+                        <button class="toggle-btn active" onclick="switchView('grid')">격자뷰</button>
+                        <button class="toggle-btn" onclick="switchView('list')">목록뷰</button>
+                    </div>
+                </div>
+
+                <div class="site-grid" id="site-grid">
+                    <!-- A동 -->
+                    <div class="site-card" onclick="showCCTVModal('A동')">
+                        <div class="site-header">
+                            <div class="site-name">A동 (지하1층~지상5층)</div>
+                            <div class="site-status status-safe">안전</div>
+                        </div>
+                        <div class="sensor-grid">
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">23°C</div>
+                                <div class="sensor-label">온도</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #58a6ff;">62%</div>
+                                <div class="sensor-label">습도</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #fb8500;">78dB</div>
+                                <div class="sensor-label">소음</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">Good</div>
+                                <div class="sensor-label">공기질</div>
+                            </div>
+                        </div>
+                                        <div class="workers-count" onclick="showWorkersList('A동')">
+                    <i class="fas fa-users"></i>
+                    <span>작업자 18명</span>
+                    <i class="fas fa-chevron-right" style="margin-left: auto; color: #58a6ff;"></i>
+                </div>
+            </div>
+
+                    <!-- B동 -->
+                    <div class="site-card" onclick="showCCTVModal('B동')">
+                        <div class="site-header">
+                            <div class="site-name">B동 (지상1층~지상3층)</div>
+                            <div class="site-status status-warning">주의</div>
+                        </div>
+                        <div class="sensor-grid">
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #fb8500;">27°C</div>
+                                <div class="sensor-label">온도</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #58a6ff;">55%</div>
+                                <div class="sensor-label">습도</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #f85149;">85dB</div>
+                                <div class="sensor-label">소음</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #fb8500;">Fair</div>
+                                <div class="sensor-label">공기질</div>
+                            </div>
+                        </div>
+                                        <div class="workers-count" onclick="showWorkersList('B동')">
+                    <i class="fas fa-users"></i>
+                    <span>작업자 15명</span>
+                    <i class="fas fa-chevron-right" style="margin-left: auto; color: #58a6ff;"></i>
+                </div>
+            </div>
+
+                    <!-- C동 -->
+                    <div class="site-card" onclick="showCCTVModal('C동')">
+                        <div class="site-header">
+                            <div class="site-name">C동 (기계실/주차장)</div>
+                            <div class="site-status status-safe">안전</div>
+                        </div>
+                        <div class="sensor-grid">
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">21°C</div>
+                                <div class="sensor-label">온도</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #58a6ff;">58%</div>
+                                <div class="sensor-label">습도</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">65dB</div>
+                                <div class="sensor-label">소음</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">Good</div>
+                                <div class="sensor-label">공기질</div>
+                            </div>
+                        </div>
+                        <div class="workers-count" onclick="showWorkersList('C동')">
+                            <i class="fas fa-users"></i>
+                            <span>작업자 14명</span>
+                            <i class="fas fa-chevron-right" style="margin-left: auto; color: #58a6ff;"></i>
+                        </div>
+                    </div>
+
+                    <!-- 외부 작업구역 -->
+                    <div class="site-card" onclick="showCCTVModal('외부작업구역')">
+                        <div class="site-header">
+                            <div class="site-name">외부 작업구역</div>
+                            <div class="site-status status-safe">안전</div>
+                        </div>
+                        <div class="sensor-grid">
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #58a6ff;">19°C</div>
+                                <div class="sensor-label">외기온</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">3m/s</div>
+                                <div class="sensor-label">풍속</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">500m</div>
+                                <div class="sensor-label">시정</div>
+                            </div>
+                            <div class="sensor-item">
+                                <div class="sensor-value" style="color: #2ea043;">0%</div>
+                                <div class="sensor-label">강수</div>
+                            </div>
+                        </div>
+                        <div class="workers-count" onclick="showWorkersList('외부작업구역')">
+                            <i class="fas fa-users"></i>
+                            <span>크레인 기사 등 5명</span>
+                            <i class="fas fa-chevron-right" style="margin-left: auto; color: #58a6ff;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단 제어 패널 -->
+            <div class="control-panel">
+                <div class="control-group">
+                    <div class="control-label">전체 시스템</div>
+                    <button class="control-btn" onclick="refreshAllSensors()">
+                        <i class="fas fa-sync-alt"></i> 센서 새로고침
+                    </button>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">AI 분석</div>
+                    <button class="control-btn" onclick="runAIAnalysis()">
+                        <i class="fas fa-brain"></i> 위험 분석 실행
+                    </button>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">보고서</div>
+                    <button class="control-btn secondary" onclick="generateReport()">
+                        <i class="fas fa-file-alt"></i> 일일 보고서 생성
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 사이드바 -->
+        <div class="sidebar">
+            <!-- 현장 날씨 모니터링 -->
+            <div class="weather-card">
+                <div class="weather-header">
+                    <div class="section-title">
+                        <i class="fas fa-cloud-sun"></i>
+                        현장 날씨
+                    </div>
+                    <div style="font-size: 0.8em; color: #8b949e;" id="weather-update">
+                        5분 전 업데이트
+                    </div>
+                </div>
+
+                <div class="weather-main">
+                    <div class="weather-icon" id="weather-icon">⛅</div>
+                    <div class="weather-info">
+                        <div class="weather-temp" id="weather-temp">19°C</div>
+                        <div class="weather-condition" id="weather-condition">구름많음</div>
+                        <div class="weather-feels">체감온도 <span id="feels-like">17°C</span></div>
+                    </div>
+                </div>
+
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <div class="detail-value" id="humidity">62%</div>
+                        <div class="detail-label">습도</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="detail-value" id="wind-speed">3.2m/s</div>
+                        <div class="detail-label">풍속</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="detail-value" id="visibility">10km</div>
+                        <div class="detail-label">시정</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="detail-value" id="precipitation">0%</div>
+                        <div class="detail-label">강수확률</div>
+                    </div>
+                </div>
+
+                <div class="weather-impact">
+                    <div class="impact-title">작업 영향도</div>
+                    <div class="impact-level">
+                        <div class="impact-indicator impact-low"></div>
+                        <div class="impact-text">모든 작업 가능 (양호)</div>
+                    </div>
+                </div>
+
+                <div class="weather-forecast">
+                    <div class="forecast-title">4시간 예보</div>
+                    <div class="forecast-hours">
+                        <div class="forecast-hour">
+                            <div class="forecast-time">15:00</div>
+                            <div class="forecast-icon">🌤️</div>
+                            <div class="forecast-temp">20°C</div>
+                        </div>
+                        <div class="forecast-hour">
+                            <div class="forecast-time">16:00</div>
+                            <div class="forecast-icon">☁️</div>
+                            <div class="forecast-temp">19°C</div>
+                        </div>
+                        <div class="forecast-hour">
+                            <div class="forecast-time">17:00</div>
+                            <div class="forecast-icon">🌧️</div>
+                            <div class="forecast-temp">18°C</div>
+                        </div>
+                        <div class="forecast-hour">
+                            <div class="forecast-time">18:00</div>
+                            <div class="forecast-icon">🌧️</div>
+                            <div class="forecast-temp">17°C</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="weather-alerts">
+                    <div class="weather-alert warning">
+                        <div class="alert-weather-text">
+                            ⚠️ 17:00부터 소나기 예상 - 외부작업 주의
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 모바일 체크리스트 수신 -->
+            <div class="checklist-dashboard">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        모바일 체크리스트
+                    </div>
+                    <div style="font-size: 0.8em; color: #8b949e;" id="checklist-update">
+                        실시간 동기화
+                    </div>
+                </div>
+
+                <div class="checklist-summary">
+                    <div class="checklist-metric">
+                        <div class="checklist-number checklist-completed" id="total-completed">12</div>
+                        <div class="checklist-label">완료됨</div>
+                    </div>
+                    <div class="checklist-metric">
+                        <div class="checklist-number checklist-pending" id="total-pending">3</div>
+                        <div class="checklist-label">진행중</div>
+                    </div>
+                    <div class="checklist-metric">
+                        <div class="checklist-number checklist-critical" id="total-critical">1</div>
+                        <div class="checklist-label">필수 미완료</div>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.9em; font-weight: 600; color: #f0f6fc; margin-bottom: 10px;">
+                    최근 제출된 체크리스트
+                </div>
+
+                <div class="recent-checklists">
+                    <div class="checklist-item-dash" onclick="viewChecklistDetail('checklist-1')">
+                        <div class="checklist-info">
+                            <div class="checklist-title">A동 3층 일일 안전점검</div>
+                            <div class="checklist-meta">김현수 관리자 • 2분 전</div>
+                        </div>
+                        <div class="checklist-status status-complete">완료</div>
+                    </div>
+
+                    <div class="checklist-item-dash" onclick="viewChecklistDetail('checklist-2')">
+                        <div class="checklist-info">
+                            <div class="checklist-title">B동 1층 PPE 점검</div>
+                            <div class="checklist-meta">이철호 작업자 • 15분 전</div>
+                        </div>
+                        <div class="checklist-status status-progress">진행중</div>
+                    </div>
+
+                    <div class="checklist-item-dash" onclick="viewChecklistDetail('checklist-3')">
+                        <div class="checklist-info">
+                            <div class="checklist-title">C동 장비 안전점검</div>
+                            <div class="checklist-meta">박민수 기사 • 32분 전</div>
+                        </div>
+                        <div class="checklist-status status-complete">완료</div>
+                    </div>
+
+                    <div class="checklist-item-dash" onclick="viewChecklistDetail('checklist-4')">
+                        <div class="checklist-info">
+                            <div class="checklist-title">전체 환경 점검</div>
+                            <div class="checklist-meta">정우진 안전관리자 • 1시간 전</div>
+                        </div>
+                        <div class="checklist-status status-progress">진행중</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 위험 예측 -->
+            <div class="ai-prediction">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-brain"></i>
+                        AI 위험 예측
+                    </div>
+                </div>
+
+                <div class="prediction-item prediction-warning">
+                    <div class="prediction-header">
+                        <div class="prediction-title">크레인 작업 충돌 위험</div>
+                        <div class="prediction-probability">73%</div>
+                    </div>
+                    <div class="prediction-description">
+                        15:30경 B동 3층 크레인 작업 시 A동 작업자와 충돌 가능성이 높습니다. 작업 순서 조정을 권장합니다.
+                    </div>
+                </div>
+
+                <div class="prediction-item prediction-info">
+                    <div class="prediction-header">
+                        <div class="prediction-title">날씨 변화 영향</div>
+                        <div class="prediction-probability">45%</div>
+                    </div>
+                    <div class="prediction-description">
+                        16:00 이후 바람이 강해질 예정입니다. 외부 고소작업 중단을 검토하세요.
+                    </div>
+                </div>
+
+                <div class="prediction-item prediction-critical">
+                    <div class="prediction-header">
+                        <div class="prediction-title">장비 고장 예측</div>
+                        <div class="prediction-probability">89%</div>
+                    </div>
+                    <div class="prediction-description">
+                        B동 호이스트 #2의 이상 진동이 감지되었습니다. 48시간 내 점검이 필요합니다.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 실시간 알림 -->
+            <div class="live-alerts">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-bell"></i>
+                        실시간 알림
+                    </div>
+                </div>
+
+                <div class="alert-list" id="alert-list">
+                    <div class="alert-item">
+                        <div class="alert-icon status-warning"></div>
+                        <div class="alert-content">
+                            <div class="alert-text">B동 3층 소음 기준치 초과</div>
+                            <div class="alert-time">2분 전</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon status-online"></div>
+                        <div class="alert-content">
+                            <div class="alert-text">A동 안전점검 완료</div>
+                            <div class="alert-time">5분 전</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon status-offline"></div>
+                        <div class="alert-content">
+                            <div class="alert-text">C동 센서 #12 통신 두절</div>
+                            <div class="alert-time">12분 전</div>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-icon status-online"></div>
+                        <div class="alert-content">
+                            <div class="alert-text">신규 작업자 3명 출입</div>
+                            <div class="alert-time">18분 전</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 응급 상황 패널 -->
+            <div class="emergency-panel">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        응급 상황 대응
+                    </div>
+                </div>
+
+                <div class="emergency-buttons">
+                    <button class="emergency-btn" onclick="emergencyStop()">
+                        <i class="fas fa-stop"></i> 전체 작업 중지
+                    </button>
+                    <button class="emergency-btn" onclick="evacuation()">
+                        <i class="fas fa-running"></i> 대피 명령
+                    </button>
+                    <button class="emergency-btn stop" onclick="fireAlarm()">
+                        <i class="fas fa-fire"></i> 화재 신고
+                    </button>
+                    <button class="emergency-btn stop" onclick="medicalEmergency()">
+                        <i class="fas fa-ambulance"></i> 응급 의료
+                    </button>
+                </div>
+
+                <div class="emergency-contacts">
+                    <div style="font-weight: 600; margin-bottom: 10px; color: #f0f6fc;">응급 연락처</div>
+                    <div class="contact-item">
+                        <span>현장 안전관리자</span>
+                        <button class="contact-call" onclick="callContact('010-1234-5678')">
+                            <i class="fas fa-phone"></i> 통화
+                        </button>
+                    </div>
+                    <div class="contact-item">
+                        <span>소방서 (119)</span>
+                        <button class="contact-call" onclick="callContact('119')">
+                            <i class="fas fa-phone"></i> 통화
+                        </button>
+                    </div>
+                    <div class="contact-item">
+                        <span>병원 응급실</span>
+                        <button class="contact-call" onclick="callContact('1339')">
+                            <i class="fas fa-phone"></i> 통화
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 작업자 리스트 모달 -->
+    <div id="workers-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="workers-modal-title">A동 작업자 현황</div>
+                <button class="modal-close" onclick="closeWorkersModal()">×</button>
+            </div>
+            <div class="worker-grid" id="workers-grid">
+                <!-- 작업자 카드들이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CCTV 모달 -->
+    <div id="cctv-modal" class="modal-overlay hidden">
+        <div class="modal cctv-modal">
+            <div class="modal-header">
+                <div class="modal-title" id="cctv-modal-title">A동 CCTV 모니터링</div>
+                <button class="modal-close" onclick="closeCCTVModal()">×</button>
+            </div>
+            <div class="cctv-grid" id="cctv-grid">
+                <!-- CCTV 카드들이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CCTV 전체화면 뷰어 -->
+    <div id="cctv-viewer" class="cctv-viewer hidden">
+        <div class="cctv-viewer-header">
+            <div class="cctv-viewer-title" id="cctv-viewer-title">A동 1층 로비 CCTV</div>
+            <div class="cctv-controls">
+                <button class="cctv-btn" onclick="toggleRecording()">
+                    <i class="fas fa-record-vinyl"></i> 녹화
+                </button>
+                <button class="cctv-btn" onclick="takeSnapshot()">
+                    <i class="fas fa-camera"></i> 캡처
+                </button>
+                <button class="cctv-btn" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i> 전체화면
+                </button>
+                <button class="cctv-btn" onclick="closeCCTVViewer()">
+                    <i class="fas fa-times"></i> 닫기
+                </button>
+            </div>
+        </div>
+        <div class="cctv-viewer-content">
+            <div class="cctv-screen">
+                <div class="cctv-overlay" id="cctv-overlay">
+                    라이브 • 14:32:15 • A동 1층 로비
+                </div>
+                <div class="cctv-feed">
+                    <div style="color: #6e7681; text-align: center;">
+                        <i class="fas fa-video" style="font-size: 4em; margin-bottom: 20px; opacity: 0.5;"></i>
+                        <div style="font-size: 1.5em; margin-bottom: 10px;">실시간 CCTV 영상</div>
+                        <div style="font-size: 1em;">시설보안상 실제 영상은 표시되지 않습니다</div>
+                        <div style="font-size: 0.9em; margin-top: 20px; color: #58a6ff;">
+                            🔴 LIVE • 해상도: 1920x1080 • FPS: 30
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 체크리스트 상세보기 모달 -->
+    <div id="checklist-detail-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title" id="checklist-detail-title">체크리스트 상세보기</div>
+                <button class="modal-close" onclick="closeChecklistDetail()">×</button>
+            </div>
+            <div id="checklist-detail-content">
+                <!-- 체크리스트 상세 내용이 여기에 표시됩니다 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 실시간 시계 업데이트
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+
+        // 실시간 데이터 업데이트 시뮬레이션
+        function updateDashboardData() {
+            // 작업자 수 랜덤 업데이트 (45-50 사이)
+            const workers = Math.floor(Math.random() * 6) + 45;
+            document.getElementById('total-workers').textContent = workers;
+
+            // 활성 센서 수 (120-127 사이)
+            const sensors = Math.floor(Math.random() * 8) + 120;
+            document.getElementById('active-sensors').textContent = sensors;
+
+            // 위험 알림 (0-5 사이)
+            const alerts = Math.floor(Math.random() * 6);
+            document.getElementById('risk-alerts').textContent = alerts;
+
+            // 안전 점수 (88-95 사이)
+            const safety = Math.floor(Math.random() * 8) + 88;
+            document.getElementById('safety-score').textContent = safety;
+        }
+
+        // 날씨 데이터 업데이트
+        function updateWeatherData() {
+            const weatherConditions = [
+                { icon: '☀️', condition: '맑음', temp: 22, feels: 20, impact: 'low', impactText: '모든 작업 가능 (최적)' },
+                { icon: '⛅', condition: '구름많음', temp: 19, feels: 17, impact: 'low', impactText: '모든 작업 가능 (양호)' },
+                { icon: '☁️', condition: '흐림', temp: 17, feels: 15, impact: 'medium', impactText: '고소작업 주의 (보통)' },
+                { icon: '🌧️', condition: '비', temp: 15, feels: 13, impact: 'high', impactText: '외부작업 제한 (위험)' },
+                { icon: '💨', condition: '강풍', temp: 18, feels: 14, impact: 'high', impactText: '크레인 작업 중단 (위험)' }
+            ];
+
+            const randomWeather = weatherConditions[Math.floor(Math.random() * weatherConditions.length)];
+            
+            // 날씨 아이콘 및 상태 업데이트
+            document.getElementById('weather-icon').textContent = randomWeather.icon;
+            document.getElementById('weather-condition').textContent = randomWeather.condition;
+            document.getElementById('weather-temp').textContent = `${randomWeather.temp}°C`;
+            document.getElementById('feels-like').textContent = `${randomWeather.feels}°C`;
+
+            // 상세 정보 업데이트
+            document.getElementById('humidity').textContent = `${Math.floor(Math.random() * 30) + 50}%`;
+            document.getElementById('wind-speed').textContent = `${(Math.random() * 5 + 1).toFixed(1)}m/s`;
+            document.getElementById('visibility').textContent = `${Math.floor(Math.random() * 5) + 8}km`;
+            document.getElementById('precipitation').textContent = `${Math.floor(Math.random() * 60)}%`;
+
+            // 작업 영향도 업데이트
+            const impactIndicator = document.querySelector('.impact-indicator');
+            const impactText = document.querySelector('.impact-text');
+            
+            impactIndicator.className = `impact-indicator impact-${randomWeather.impact}`;
+            impactText.textContent = randomWeather.impactText;
+
+            // 업데이트 시간
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('weather-update').textContent = `방금 업데이트 (${timeString})`;
+        }
+
+        // 뷰 전환 함수
+        function switchView(viewType) {
+            const buttons = document.querySelectorAll('.toggle-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (viewType === 'grid') {
+                buttons[0].classList.add('active');
+                // 격자뷰 로직
+            } else {
+                buttons[1].classList.add('active');
+                // 목록뷰 로직
+            }
+        }
+
+        // 센서 새로고침
+        function refreshAllSensors() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loading"></div> 새로고침 중...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                updateDashboardData();
+                addAlert('모든 센서 데이터가 새로고침되었습니다.', 'online');
+            }, 2000);
+        }
+
+        // AI 분석 실행
+        function runAIAnalysis() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loading"></div> 분석 중...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                addAlert('AI 위험 분석이 완료되었습니다. 새로운 예측이 업데이트되었습니다.', 'online');
+            }, 3000);
+        }
+
+        // 보고서 생성
+        function generateReport() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loading"></div> 생성 중...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                addAlert('일일 안전 보고서가 생성되었습니다.', 'online');
+            }, 2500);
+        }
+
+        // 응급 상황 함수들
+        function emergencyStop() {
+            if (confirm('⚠️ 전체 작업을 중지하시겠습니까?\n이 작업은 즉시 모든 현장에 전파됩니다.')) {
+                addAlert('🚨 긴급: 전체 작업 중지 명령이 발령되었습니다!', 'offline');
+                alert('전체 작업 중지 명령이 현장에 전파되었습니다.');
+            }
+        }
+
+        function evacuation() {
+            if (confirm('🚨 대피 명령을 발령하시겠습니까?\n모든 작업자에게 즉시 대피 신호가 전송됩니다.')) {
+                addAlert('🚨 긴급: 대피 명령이 발령되었습니다!', 'offline');
+                alert('대피 명령이 현장 전체에 방송되었습니다.');
+            }
+        }
+
+        function fireAlarm() {
+            if (confirm('🔥 화재 신고를 하시겠습니까?\n소방서에 자동으로 신고됩니다.')) {
+                addAlert('🔥 화재 신고가 접수되었습니다. 소방서 출동 요청.', 'offline');
+                alert('소방서에 화재 신고가 완료되었습니다.');
+            }
+        }
+
+        function medicalEmergency() {
+            if (confirm('🚑 응급 의료 상황을 신고하시겠습니까?\n119와 인근 병원에 연락됩니다.')) {
+                addAlert('🚑 응급 의료 상황 신고 완료. 구급차 출동 요청.', 'offline');
+                alert('응급 의료팀에 신고가 완료되었습니다.');
+            }
+        }
+
+        function callContact(number) {
+            alert(`📞 ${number}로 전화를 겁니다.`);
+            // 실제 환경에서는 전화 걸기 API 호출
+        }
+
+        // 알림 추가 함수
+        function addAlert(message, type) {
+            const alertList = document.getElementById('alert-list');
+            const newAlert = document.createElement('div');
+            newAlert.className = 'alert-item';
+            newAlert.innerHTML = `
+                <div class="alert-icon status-${type}"></div>
+                <div class="alert-content">
+                    <div class="alert-text">${message}</div>
+                    <div class="alert-time">방금 전</div>
+                </div>
+            `;
+            
+            alertList.insertBefore(newAlert, alertList.firstChild);
+            
+            // 5개 이상의 알림이 있으면 마지막 것 제거
+            if (alertList.children.length > 5) {
+                alertList.removeChild(alertList.lastChild);
+            }
+        }
+
+        // 작업자 데이터
+        const workersData = {
+            'A동': [
+                { name: '김현수', role: '현장감독', location: 'A동 3층', status: 'online', avatar: '김' },
+                { name: '이철민', role: '철근공', location: 'A동 2층', status: 'online', avatar: '이' },
+                { name: '박준호', role: '목수', location: 'A동 3층', status: 'online', avatar: '박' },
+                { name: '정우진', role: '전기기사', location: 'A동 1층', status: 'idle', avatar: '정' },
+                { name: '최민수', role: '배관공', location: 'A동 지하1층', status: 'online', avatar: '최' },
+                { name: '강태욱', role: '철근공', location: 'A동 3층', status: 'online', avatar: '강' },
+                { name: '윤상호', role: '목수', location: 'A동 2층', status: 'online', avatar: '윤' },
+                { name: '임동혁', role: '안전관리자', location: 'A동 현장사무소', status: 'online', avatar: '임' }
+            ],
+            'B동': [
+                { name: '서준영', role: '현장소장', location: 'B동 3층', status: 'online', avatar: '서' },
+                { name: '한지민', role: '철근공', location: 'B동 2층', status: 'online', avatar: '한' },
+                { name: '조성훈', role: '콘크리트공', location: 'B동 1층', status: 'online', avatar: '조' },
+                { name: '노영수', role: '목수', location: 'B동 3층', status: 'idle', avatar: '노' },
+                { name: '백승우', role: '전기기사', location: 'B동 2층', status: 'online', avatar: '백' },
+                { name: '신동준', role: '배관공', location: 'B동 1층', status: 'online', avatar: '신' }
+            ],
+            'C동': [
+                { name: '홍길동', role: '기계기사', location: 'C동 기계실', status: 'online', avatar: '홍' },
+                { name: '김영희', role: '전기기사', location: 'C동 전기실', status: 'online', avatar: '김' },
+                { name: '이순신', role: '시설관리', location: 'C동 관리실', status: 'online', avatar: '이' },
+                { name: '박문수', role: '보안요원', location: 'C동 주차장', status: 'idle', avatar: '박' },
+                { name: '정약용', role: '청소관리', location: 'C동 전체', status: 'online', avatar: '정' }
+            ],
+            '외부작업구역': [
+                { name: '양기철', role: '크레인기사', location: '타워크레인 #1', status: 'online', avatar: '양' },
+                { name: '송민호', role: '크레인기사', location: '타워크레인 #2', status: 'online', avatar: '송' },
+                { name: '김대현', role: '신호수', location: '외부 작업장', status: 'online', avatar: '김' },
+                { name: '차은우', role: '안전관리자', location: '외부 현장', status: 'online', avatar: '차' },
+                { name: '이준기', role: '장비관리', location: '장비보관소', status: 'idle', avatar: '이' }
+            ]
+        };
+
+        // CCTV 데이터
+        const cctvData = {
+            'A동': [
+                { name: 'A동 1층 로비', location: '1층 메인 출입구', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'A동 2층 복도', location: '2층 중앙 복도', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'A동 3층 작업현장', location: '3층 철근 작업장', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'A동 4층 작업현장', location: '4층 콘크리트 작업장', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'A동 5층 작업현장', location: '5층 마감 작업장', status: 'inactive', resolution: '1920x1080', fps: 0 },
+                { name: 'A동 지하1층', location: '지하 주차장', status: 'active', resolution: '1920x1080', fps: 30 }
+            ],
+            'B동': [
+                { name: 'B동 1층 현장사무소', location: '1층 현장사무소', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'B동 2층 작업현장', location: '2층 골조 작업장', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'B동 3층 작업현장', location: '3층 마감 작업장', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'B동 옥상', location: '옥상 설비 설치장', status: 'inactive', resolution: '1920x1080', fps: 0 }
+            ],
+            'C동': [
+                { name: 'C동 기계실', location: '지하 기계실', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'C동 전기실', location: '지하 전기실', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'C동 주차장 A구역', location: '지하 주차장 A', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'C동 주차장 B구역', location: '지하 주차장 B', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: 'C동 관리사무소', location: '1층 관리사무소', status: 'active', resolution: '1920x1080', fps: 30 }
+            ],
+            '외부작업구역': [
+                { name: '타워크레인 #1', location: '북쪽 크레인', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: '타워크레인 #2', location: '남쪽 크레인', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: '외부 작업장 전경', location: '현장 전체 조망', status: 'active', resolution: '4K UHD', fps: 60 },
+                { name: '자재 적재장', location: '동쪽 자재 보관소', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: '현장 출입구', location: '메인 게이트', status: 'active', resolution: '1920x1080', fps: 30 },
+                { name: '장비 보관소', location: '서쪽 장비 창고', status: 'inactive', resolution: '1920x1080', fps: 0 }
+            ]
+        };
+
+        // 체크리스트 상세 데이터
+        const checklistDetails = {
+            'checklist-1': {
+                title: 'A동 3층 일일 안전점검',
+                submitter: '김현수 관리자',
+                submitTime: '2분 전',
+                location: 'A동 3층',
+                completionRate: '100%',
+                items: [
+                    { section: 'PPE 점검', item: '안전모 착용 확인', status: 'completed', priority: '필수' },
+                    { section: 'PPE 점검', item: '안전화 착용 확인', status: 'completed', priority: '필수' },
+                    { section: 'PPE 점검', item: '안전조끼 착용 확인', status: 'completed', priority: '권장' },
+                    { section: '장비 점검', item: '크레인 작동 점검', status: 'completed', priority: '필수' },
+                    { section: '장비 점검', item: '전동공구 점검', status: 'completed', priority: '권장' },
+                    { section: '환경 점검', item: '작업구역 정리정돈', status: 'completed', priority: '필수' },
+                    { section: '안전교육', item: '일일 안전교육 실시', status: 'completed', priority: '필수' }
+                ]
+            },
+            'checklist-2': {
+                title: 'B동 1층 PPE 점검',
+                submitter: '이철호 작업자',
+                submitTime: '15분 전',
+                location: 'B동 1층',
+                completionRate: '75%',
+                items: [
+                    { section: 'PPE 점검', item: '안전모 착용 확인', status: 'completed', priority: '필수' },
+                    { section: 'PPE 점검', item: '안전화 착용 확인', status: 'completed', priority: '필수' },
+                    { section: 'PPE 점검', item: '안전조끼 착용 확인', status: 'pending', priority: '권장' },
+                    { section: 'PPE 점검', item: '안전벨트 점검', status: 'completed', priority: '필수' }
+                ]
+            }
+        };
+
+        // 작업자 리스트 모달 표시
+        function showWorkersList(building) {
+            const modal = document.getElementById('workers-modal');
+            const title = document.getElementById('workers-modal-title');
+            const grid = document.getElementById('workers-grid');
+            
+            title.textContent = `${building} 작업자 현황`;
+            grid.innerHTML = '';
+            
+            const workers = workersData[building] || [];
+            workers.forEach(worker => {
+                const workerCard = document.createElement('div');
+                workerCard.className = 'worker-card';
+                workerCard.innerHTML = `
+                    <div class="worker-header">
+                        <div class="worker-avatar-modal">${worker.avatar}</div>
+                        <div class="worker-details">
+                            <div class="worker-name-modal">${worker.name}</div>
+                            <div class="worker-role-modal">${worker.role}</div>
+                        </div>
+                    </div>
+                    <div class="worker-status-row">
+                        <div class="worker-location">📍 ${worker.location}</div>
+                        <div class="worker-status-badge status-${worker.status}">
+                            ${worker.status === 'online' ? '근무중' : worker.status === 'idle' ? '대기중' : '오프라인'}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(workerCard);
+            });
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 작업자 리스트 모달 닫기
+        function closeWorkersModal() {
+            document.getElementById('workers-modal').classList.add('hidden');
+        }
+
+        // CCTV 모달 표시
+        function showCCTVModal(building) {
+            const modal = document.getElementById('cctv-modal');
+            const title = document.getElementById('cctv-modal-title');
+            const grid = document.getElementById('cctv-grid');
+            
+            title.textContent = `${building} CCTV 모니터링`;
+            grid.innerHTML = '';
+            
+            const cctvs = cctvData[building] || [];
+            cctvs.forEach((cctv, index) => {
+                const cctvCard = document.createElement('div');
+                cctvCard.className = 'cctv-card';
+                cctvCard.onclick = () => openCCTVViewer(building, index);
+                cctvCard.innerHTML = `
+                    <div class="cctv-header">
+                        <div class="cctv-title">${cctv.name}</div>
+                        <div class="cctv-status ${cctv.status === 'active' ? 'cctv-active' : 'cctv-inactive'}">
+                            ${cctv.status === 'active' ? '활성' : '비활성'}
+                        </div>
+                    </div>
+                    <div class="cctv-preview">
+                        <div class="cctv-placeholder">
+                            <i class="fas fa-video" style="font-size: 2em; margin-bottom: 10px; opacity: 0.3;"></i>
+                            <div style="font-size: 0.9em;">${cctv.status === 'active' ? '실시간 영상' : '신호 없음'}</div>
+                        </div>
+                    </div>
+                    <div class="cctv-info">
+                        <span>📍 ${cctv.location}</span>
+                        <span>${cctv.resolution} • ${cctv.fps}fps</span>
+                    </div>
+                `;
+                grid.appendChild(cctvCard);
+            });
+            
+            modal.classList.remove('hidden');
+        }
+
+        // CCTV 모달 닫기
+        function closeCCTVModal() {
+            document.getElementById('cctv-modal').classList.add('hidden');
+        }
+
+        // CCTV 전체화면 뷰어 열기
+        function openCCTVViewer(building, cctvIndex) {
+            const cctv = cctvData[building][cctvIndex];
+            const viewer = document.getElementById('cctv-viewer');
+            const title = document.getElementById('cctv-viewer-title');
+            const overlay = document.getElementById('cctv-overlay');
+            
+            title.textContent = cctv.name;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR');
+            overlay.textContent = `라이브 • ${timeString} • ${cctv.location}`;
+            
+            viewer.classList.remove('hidden');
+            closeCCTVModal(); // CCTV 모달 닫기
+        }
+
+        // CCTV 뷰어 닫기
+        function closeCCTVViewer() {
+            document.getElementById('cctv-viewer').classList.add('hidden');
+        }
+
+        // CCTV 제어 기능들
+        function toggleRecording() {
+            alert('📹 녹화가 시작되었습니다.');
+        }
+
+        function takeSnapshot() {
+            alert('📸 스크린샷이 저장되었습니다.');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // 체크리스트 상세보기
+        function viewChecklistDetail(checklistId) {
+            const modal = document.getElementById('checklist-detail-modal');
+            const title = document.getElementById('checklist-detail-title');
+            const content = document.getElementById('checklist-detail-content');
+            
+            const checklist = checklistDetails[checklistId];
+            if (!checklist) return;
+            
+            title.textContent = checklist.title;
+            
+            let itemsHtml = '';
+            checklist.items.forEach(item => {
+                const statusIcon = item.status === 'completed' ? '✅' : '⏸️';
+                const statusColor = item.status === 'completed' ? '#2ea043' : '#fb8500';
+                const priorityColor = item.priority === '필수' ? '#f85149' : item.priority === '권장' ? '#fb8500' : '#2ea043';
+                
+                itemsHtml += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #21262d;">
+                        <div>
+                            <div style="font-weight: 600; color: #f0f6fc; margin-bottom: 3px;">
+                                ${statusIcon} ${item.item}
+                            </div>
+                            <div style="font-size: 0.8em; color: #8b949e;">
+                                ${item.section}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: ${statusColor}; font-size: 0.8em; margin-bottom: 3px;">
+                                ${item.status === 'completed' ? '완료' : '대기중'}
+                            </div>
+                            <div style="background: ${priorityColor}; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em;">
+                                ${item.priority}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = `
+                <div style="background: #21262d; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+                        <div>
+                            <div style="color: #8b949e; font-size: 0.8em;">제출자</div>
+                            <div style="color: #f0f6fc; font-weight: 600;">${checklist.submitter}</div>
+                        </div>
+                        <div>
+                            <div style="color: #8b949e; font-size: 0.8em;">제출시간</div>
+                            <div style="color: #f0f6fc; font-weight: 600;">${checklist.submitTime}</div>
+                        </div>
+                        <div>
+                            <div style="color: #8b949e; font-size: 0.8em;">위치</div>
+                            <div style="color: #f0f6fc; font-weight: 600;">📍 ${checklist.location}</div>
+                        </div>
+                        <div>
+                            <div style="color: #8b949e; font-size: 0.8em;">완료율</div>
+                            <div style="color: #2ea043; font-weight: 600; font-size: 1.2em;">${checklist.completionRate}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="font-size: 1em; font-weight: 600; color: #f0f6fc; margin-bottom: 15px;">
+                    체크리스트 항목 (${checklist.items.length}개)
+                </div>
+                
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${itemsHtml}
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 체크리스트 상세보기 모달 닫기
+        function closeChecklistDetail() {
+            document.getElementById('checklist-detail-modal').classList.add('hidden');
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.classList.add('hidden');
+            }
+        });
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Safe Con-BIM Phase 2 대시보드 로드 완료');
+            updateTime();
+            updateDashboardData();
+            updateWeatherData();
+            
+            // 실시간 업데이트 설정
+            setInterval(updateTime, 1000);
+            setInterval(updateDashboardData, 10000); // 10초마다 데이터 업데이트
+            setInterval(updateWeatherData, 60000); // 1분마다 날씨 업데이트
+            
+            // 랜덤 알림 생성 (데모용)
+            setInterval(() => {
+                const messages = [
+                    'PPE 착용률 체크 완료',
+                    '환경 센서 정상 작동 확인',
+                    '작업자 출입 기록 업데이트',
+                    'AI 분석 결과 업데이트',
+                    '안전 점검 일정 알림'
+                ];
+                const types = ['online', 'warning', 'online', 'online', 'warning'];
+                const randomIndex = Math.floor(Math.random() * messages.length);
+                addAlert(messages[randomIndex], types[randomIndex]);
+            }, 30000); // 30초마다 랜덤 알림
+        });
+    </script>
+</body>
+</html> 

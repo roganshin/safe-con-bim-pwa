@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA 아이콘 생성기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background: #f8f9fa;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background: #e3f2fd;
+        }
+        #fileInput {
+            display: none;
+        }
+        .preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .icon-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .icon-item canvas {
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .icon-size {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .download-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .download-btn:hover {
+            background: #0056b3;
+        }
+        .download-all {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 30px auto;
+            display: block;
+        }
+        .download-all:hover {
+            background: #218838;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .info h3 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 PWA 아이콘 생성기</h1>
+        
+        <div class="info">
+            <h3>📋 사용 방법</h3>
+            <p>1. 정사각형 이미지 파일을 업로드하세요 (최소 512x512 권장)</p>
+            <p>2. 자동으로 PWA에 필요한 모든 크기의 아이콘이 생성됩니다</p>
+            <p>3. 개별 다운로드 또는 ZIP 파일로 일괄 다운로드하세요</p>
+        </div>
+
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p>📁 이미지 파일을 클릭하거나 드래그하여 업로드하세요</p>
+            <p style="font-size: 14px; color: #666;">지원 형식: PNG, JPG, JPEG</p>
+        </div>
+        
+        <input type="file" id="fileInput" accept="image/*">
+        
+        <div id="preview" class="preview" style="display: none;">
+            <h3>원본 이미지</h3>
+            <img id="originalImage" alt="원본 이미지">
+        </div>
+        
+        <div id="iconGrid" class="icon-grid" style="display: none;"></div>
+        
+        <button id="downloadAll" class="download-all" style="display: none;">
+            📦 모든 아이콘 ZIP으로 다운로드
+        </button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.querySelector('.upload-area');
+        const preview = document.getElementById('preview');
+        const originalImage = document.getElementById('originalImage');
+        const iconGrid = document.getElementById('iconGrid');
+        const downloadAllBtn = document.getElementById('downloadAll');
+
+        // PWA에 필요한 아이콘 크기들
+        const iconSizes = [
+            { size: 72, name: 'icon-72x72.png' },
+            { size: 96, name: 'icon-96x96.png' },
+            { size: 128, name: 'icon-128x128.png' },
+            { size: 144, name: 'icon-144x144.png' },
+            { size: 152, name: 'icon-152x152.png' },
+            { size: 192, name: 'icon-192x192.png' },
+            { size: 384, name: 'icon-384x384.png' },
+            { size: 512, name: 'icon-512x512.png' }
+        ];
+
+        let generatedIcons = [];
+
+        // 드래그 앤 드롭 이벤트
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImage.src = e.target.result;
+                originalImage.onload = () => {
+                    preview.style.display = 'block';
+                    generateIcons(originalImage);
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function generateIcons(sourceImage) {
+            iconGrid.innerHTML = '';
+            generatedIcons = [];
+
+            iconSizes.forEach(({ size, name }) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                canvas.width = size;
+                canvas.height = size;
+                
+                // 고품질 리사이징을 위한 설정
+                ctx.imageSmoothingEnabled = true;
+                ctx.imageSmoothingQuality = 'high';
+                
+                // 이미지를 캔버스에 그리기
+                ctx.drawImage(sourceImage, 0, 0, size, size);
+                
+                // 데이터 URL로 변환
+                const dataURL = canvas.toDataURL('image/png');
+                generatedIcons.push({ name, dataURL, size });
+                
+                // UI에 표시
+                const iconItem = document.createElement('div');
+                iconItem.className = 'icon-item';
+                iconItem.innerHTML = `
+                    ${canvas.outerHTML}
+                    <div class="icon-size">${size}x${size}</div>
+                    <button class="download-btn" onclick="downloadIcon('${name}', '${dataURL}')">
+                        다운로드
+                    </button>
+                `;
+                
+                iconGrid.appendChild(iconItem);
+            });
+
+            iconGrid.style.display = 'grid';
+            downloadAllBtn.style.display = 'block';
+        }
+
+        function downloadIcon(filename, dataURL) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = dataURL;
+            link.click();
+        }
+
+        downloadAllBtn.addEventListener('click', () => {
+            const zip = new JSZip();
+            const img = zip.folder('icons');
+
+            generatedIcons.forEach(({ name, dataURL }) => {
+                // data:image/png;base64, 부분 제거
+                const base64Data = dataURL.split(',')[1];
+                img.file(name, base64Data, { base64: true });
+            });
+
+            // manifest.json 파일도 포함
+            const manifestContent = {
+                "name": "Safe Con-BIM",
+                "short_name": "SafeConBIM",
+                "description": "모바일 건설 현장 안전관리 플랫폼",
+                "start_url": "./",
+                "display": "standalone",
+                "background_color": "#0d1117",
+                "theme_color": "#161b22",
+                "icons": iconSizes.map(({ size, name }) => ({
+                    "src": `./icons/${name}`,
+                    "sizes": `${size}x${size}`,
+                    "type": "image/png",
+                    "purpose": "maskable any"
+                }))
+            };
+
+            zip.file('manifest.json', JSON.stringify(manifestContent, null, 2));
+
+            // 사용 가이드 파일도 포함
+            const guide = `# PWA 아이콘 설치 가이드
+
+이 ZIP 파일에는 PWA에 필요한 모든 아이콘이 포함되어 있습니다.
+
+## 사용 방법:
+1. icons 폴더의 모든 아이콘을 웹 서버에 업로드
+2. manifest.json을 수정하여 아이콘 경로 설정
+3. HTML에서 manifest.json 링크 확인
+
+## 아이콘 크기별 용도:
+- 72x72: Android 기본
+- 96x96: Android 고밀도
+- 128x128: Windows 타일
+- 144x144: Windows 고밀도
+- 152x152: iOS 기본
+- 192x192: Android 홈스크린
+- 384x384: Android 스플래시
+- 512x512: 고해상도 디스플레이
+
+생성일: ${new Date().toLocaleString('ko-KR')}
+`;
+
+            zip.file('README.txt', guide);
+
+            zip.generateAsync({ type: 'blob' })
+                .then(content => {
+                    const link = document.createElement('a');
+                    link.download = 'pwa-icons.zip';
+                    link.href = URL.createObjectURL(content);
+                    link.click();
+                });
+        });
+    </script>
+</body>
+</html>

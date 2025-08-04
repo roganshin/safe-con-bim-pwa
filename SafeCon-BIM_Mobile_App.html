@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Con-BIM</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d1117">
+    
+    <!-- iOS PWA 지원을 위한 메타 태그 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Safe Con-BIM">
+    
+    <!-- iOS 아이콘 설정 -->
+    <link rel="apple-touch-icon" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="57x57" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="./logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./logo.png">
+    
+    <!-- iOS 스플래시 스크린 -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-startup-image" href="./logo.png">
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#0d1117">
+    <meta name="msapplication-TileImage" content="./logo.png">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            background: #0d1117;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            border-left: 1px solid #21262d;
+            border-right: 1px solid #21262d;
+        }
+
+        /* 로그인 화면 */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 20px;
+        }
+
+        .login-logo {
+            width: 120px;
+            height: 120px;
+            background: url('./logo.png') center/contain no-repeat;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            border: 2px solid #21262d;
+        }
+
+        .login-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #f0f6fc;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            font-size: 1em;
+            color: #8b949e;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .role-buttons {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .role-btn {
+            padding: 18px 24px;
+            border: 2px solid #21262d;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            color: #f0f6fc;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .role-btn:hover {
+            border-color: #58a6ff;
+            background: linear-gradient(135deg, #1f2937 0%, #161b22 100%);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.15);
+        }
+
+        .role-btn.manager {
+            border-color: #f85149;
+        }
+
+        .role-btn.manager:hover {
+            border-color: #f85149;
+            box-shadow: 0 4px 12px rgba(248, 81, 73, 0.15);
+        }
+
+        /* 헤더 */
+        .header {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            color: #f0f6fc;
+            padding: 20px 15px 15px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: url('./logo.png') center/contain no-repeat;
+            filter: brightness(1.2);
+        }
+
+        .tagline {
+            font-size: 0.85em;
+            opacity: 0.8;
+            color: #8b949e;
+        }
+
+        .header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .voice-btn, .qr-btn {
+            background: linear-gradient(135deg, #238636 0%, #1a7f37 100%);
+            border: 1px solid #2ea043;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .qr-btn {
+            background: linear-gradient(135deg, #1f6feb 0%, #0969da 100%);
+            border-color: #1f6feb;
+        }
+
+        .voice-btn:active, .qr-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 상태 표시 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #161b22;
+            padding: 10px 15px;
+            border-bottom: 1px solid #21262d;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+            color: #8b949e;
+        }
+
+        .status-green { color: #2ea043; }
+        .status-orange { color: #fb8500; }
+        .status-red { color: #f85149; }
+        .status-blue { color: #58a6ff; }
+
+        /* 메인 콘텐츠 */
+        .main-content {
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+
+        /* 대시보드 카드 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            text-align: center;
+            transition: all 0.2s ease;
+            color: #f0f6fc;
+        }
+
+        .card:hover {
+            border-color: #30363d;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(88, 166, 255, 0.3));
+        }
+
+        .card-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #8b949e;
+        }
+
+        .card-value {
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+
+        .safety-score { color: #2ea043; }
+        .risk-count { color: #f85149; }
+        .worker-count { color: #58a6ff; }
+        .completion { color: #fb8500; }
+
+        /* 알림 섹션 */
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f0f6fc;
+        }
+
+        .alert-list {
+            space-y: 10px;
+        }
+
+        .alert-item {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border-left: 4px solid;
+            color: #f0f6fc;
+        }
+
+        .alert-critical { border-left-color: #f85149; }
+        .alert-warning { border-left-color: #fb8500; }
+        .alert-info { border-left-color: #58a6ff; }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .alert-time {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .alert-description {
+            font-size: 0.85em;
+            color: #c9d1d9;
+        }
+
+        /* 작업자 목록 */
+        .worker-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .worker-item {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            color: #f0f6fc;
+        }
+
+        .worker-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+            border: 2px solid #21262d;
+        }
+
+        .worker-info {
+            flex: 1;
+        }
+
+        .worker-name {
+            font-weight: 600;
+            font-size: 0.9em;
+            color: #f0f6fc;
+        }
+
+        .worker-role {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .worker-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: auto;
+        }
+
+        /* 네비게이션 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border-top: 1px solid #21262d;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            text-decoration: none;
+            color: #8b949e;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .nav-item.active,
+        .nav-item:hover {
+            color: #58a6ff;
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .nav-item i {
+            font-size: 1.2em;
+            margin-bottom: 4px;
+        }
+
+        .nav-item span {
+            font-size: 0.7em;
+        }
+
+        /* 모달 및 탭 */
+        .tab-container {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .tab-header {
+            display: flex;
+            background: #21262d;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: none;
+            border: none;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #8b949e;
+        }
+
+        .tab-button.active {
+            background: #58a6ff;
+            color: white;
+        }
+
+        .tab-content {
+            padding: 15px;
+            display: none;
+            color: #f0f6fc;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* BIM 시뮬레이션 */
+        .bim-container {
+            background: #0d1117;
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .bim-viewer {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #161b22 25%, transparent 25%), 
+                        linear-gradient(-45deg, #161b22 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #161b22 75%), 
+                        linear-gradient(-45deg, transparent 75%, #161b22 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border-radius: 8px;
+            border: 2px solid #21262d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .bim-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* QR 스캐너 */
+        .qr-scanner {
+            background: #0d1117;
+            border: 2px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .qr-viewfinder {
+            width: 200px;
+            height: 200px;
+            border: 2px solid #58a6ff;
+            border-radius: 12px;
+            margin: 0 auto 15px;
+            position: relative;
+            background: linear-gradient(45deg, rgba(88, 166, 255, 0.1) 25%, transparent 25%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qr-viewfinder::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px dashed #58a6ff;
+            border-radius: 8px;
+        }
+
+        /* 반응형 */
+        @media (max-width: 380px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(88, 166, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); }
+        }
+
+        /* 추가 스타일 */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #21262d;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ea043, #238636);
+            transition: width 0.3s ease;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #58a6ff, #1f6feb);
+            color: white;
+            border: 1px solid #1f6feb;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+
+        .action-btn:hover {
+            background: linear-gradient(135deg, #6cb6ff, #4184f4);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #6e7681, #484f58);
+            border-color: #6e7681;
+        }
+
+        .action-btn.secondary:hover {
+            background: linear-gradient(135deg, #8b949e, #6e7681);
+        }
+
+        .action-btn.danger {
+            background: linear-gradient(135deg, #f85149, #da3633);
+            border-color: #f85149;
+        }
+
+        /* 워커 전용 스타일 */
+        .worker-mode {
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .account-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            border: 1px solid;
+        }
+
+        .account-badge.basic {
+            background: linear-gradient(135deg, #6e7681, #484f58);
+            border-color: #6e7681;
+            color: white;
+        }
+
+        .account-badge.pro {
+            background: linear-gradient(135deg, #fb8500, #f77f00);
+            border-color: #fb8500;
+            color: white;
+        }
+
+        .worker-qr-btn {
+            background: linear-gradient(135deg, #2ea043, #1a7f37);
+            border: 2px solid #2ea043;
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+            margin: 20px auto;
+        }
+
+        .worker-qr-btn:hover {
+            background: linear-gradient(135deg, #46954a, #238636);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(46, 160, 67, 0.3);
+        }
+
+        .plan-comparison {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .plan-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #f0f6fc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: #f0f6fc;
+            background: #21262d;
+        }
+
+        .upgrade-notification {
+            background: linear-gradient(135deg, #2ea043, #238636);
+            border: 1px solid #2ea043;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            color: white;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* 디지털 체크리스트 스타일 */
+        .checklist-container {
+            padding: 0;
+        }
+
+        .checklist-header {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .checklist-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 8px;
+            border-radius: 8px;
+            background: #21262d;
+        }
+
+        .stat-number {
+            font-size: 1.2em;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+
+        .checklist-section {
+            background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
+            border: 1px solid #21262d;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #21262d;
+            padding: 12px 15px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .section-header:hover {
+            background: #30363d;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #f0f6fc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-progress {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .section-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .section-content.expanded {
+            max-height: 1000px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #21262d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .checklist-item.completed {
+            background: rgba(46, 160, 67, 0.1);
+        }
+
+        .checklist-item.critical {
+            background: rgba(248, 81, 73, 0.1);
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #30363d;
+            border-radius: 4px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .checkbox.checked {
+            background: #2ea043;
+            border-color: #2ea043;
+            color: white;
+        }
+
+        .checkbox.critical {
+            border-color: #f85149;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 500;
+            color: #f0f6fc;
+            margin-bottom: 2px;
+        }
+
+        .item-description {
+            font-size: 0.8em;
+            color: #8b949e;
+        }
+
+        .item-priority {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .priority-high {
+            background: #f85149;
+            color: white;
+        }
+
+        .priority-medium {
+            background: #fb8500;
+            color: white;
+        }
+
+        .priority-low {
+            background: #2ea043;
+            color: white;
+        }
+
+        .submit-checklist {
+            background: linear-gradient(135deg, #2ea043, #238636);
+            border: 2px solid #2ea043;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .submit-checklist:hover {
+            background: linear-gradient(135deg, #46954a, #2ea043);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(46, 160, 67, 0.3);
+        }
+
+        .submit-checklist:disabled {
+            background: #6e7681;
+            border-color: #6e7681;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .plan-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .plan-features li {
+            padding: 8px 0;
+            border-bottom: 1px solid #21262d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #c9d1d9;
+            font-size: 0.9em;
+        }
+
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-status {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .feature-included {
+            background: #2ea043;
+            color: white;
+        }
+
+        .feature-limited {
+            background: #fb8500;
+            color: white;
+        }
+
+        .feature-locked {
+            background: #6e7681;
+            color: white;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #fb8500, #f77f00);
+            border: 2px solid #fb8500;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            width: 100%;
+            margin: 15px auto;
+        }
+
+        .upgrade-btn:hover {
+            background: linear-gradient(135deg, #ffb700, #fb8500);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(251, 133, 0, 0.3);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 로그인 화면 -->
+        <div id="login-screen" class="login-screen">
+            <div class="login-logo"></div>
+            <div class="login-title">Safe Con-BIM</div>
+            <div class="login-subtitle">Building Safety Before Building</div>
+            <div class="role-buttons">
+                <button class="role-btn worker" onclick="loginAs('worker')">
+                    <i class="fas fa-hard-hat"></i>
+                    <span>작업자 모드</span>
+                </button>
+                <button class="role-btn manager" onclick="loginAs('manager')">
+                    <i class="fas fa-user-tie"></i>
+                    <span>관리자 모드</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 관리자 앱 -->
+        <div id="manager-app" class="hidden">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="account-badge basic" id="manager-account-type">
+                    <i class="fas fa-user"></i> Basic 계정
+                </div>
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <span>Safe Con-BIM</span>
+                </div>
+                <div class="tagline">Building Safety Before Building</div>
+                <div class="header-controls">
+                    <button class="voice-btn" onclick="startVoiceRecognition()">
+                        <i class="fas fa-microphone"></i> 음성인식
+                    </button>
+                    <button class="qr-btn" onclick="startQRScanner()">
+                        <i class="fas fa-qrcode"></i> QR스캔
+                    </button>
+                </div>
+            </div>
+
+            <!-- 상태 표시바 -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-indicator status-green" style="background: #2ea043;"></div>
+                    <i class="fas fa-wifi status-green"></i>
+                    <span>연결됨</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator status-green" style="background: #2ea043;"></div>
+                    <i class="fas fa-shield-alt status-green"></i>
+                    <span>안전</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-clock status-blue"></i>
+                    <span id="current-time">14:32</span>
+                </div>
+            </div>
+
+            <!-- 메인 콘텐츠 -->
+            <div class="main-content">
+                <!-- 대시보드 -->
+                <div id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <div class="card-icon">🛡️</div>
+                        <div class="card-title">안전 점수</div>
+                        <div class="card-value safety-score">87</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 87%"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">⚠️</div>
+                        <div class="card-title">위험 요소</div>
+                        <div class="card-value risk-count">3</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">👷</div>
+                        <div class="card-title">현재 작업자</div>
+                        <div class="card-value worker-count">12</div>
+                    </div>
+                    <div class="card">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">진행률</div>
+                        <div class="card-value completion">65%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                    <!-- 빠른 액션 -->
+                    <div class="quick-actions">
+                        <button class="action-btn" onclick="checkFeatureAccess('bim')">
+                            <i class="fas fa-cube"></i> BIM 시뮬레이션
+                            <span style="font-size: 0.7em; opacity: 0.8;" id="bim-badge">🔒 Pro</span>
+                        </button>
+                        <button class="action-btn secondary" onclick="checkFeatureAccess('monitoring')">
+                            <i class="fas fa-video"></i> 고급 모니터링
+                            <span style="font-size: 0.7em; opacity: 0.8;" id="monitoring-badge">🔒 Pro</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 계정 비교 (관리자용) - 기본 숨김 -->
+                <div class="plan-comparison hidden" id="plan-comparison">
+                    <div class="plan-title">
+                        💡 계정 기능 비교
+                        <button class="close-btn" onclick="hidePlanComparison()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <ul class="plan-features">
+                        <li>
+                            <span>기본 안전점검</span>
+                            <span class="feature-status feature-included">포함</span>
+                        </li>
+                        <li>
+                            <span>QR/NFC 위치추적</span>
+                            <span class="feature-status feature-included">포함</span>
+                        </li>
+                        <li>
+                            <span>기본 모니터링</span>
+                            <span class="feature-status feature-limited">제한</span>
+                        </li>
+                        <li>
+                            <span>BIM 4D 시뮬레이션</span>
+                            <span class="feature-status feature-locked" id="bim-feature">Pro 전용</span>
+                        </li>
+                        <li>
+                            <span>AI 위험 예측</span>
+                            <span class="feature-status feature-locked" id="ai-feature">Pro 전용</span>
+                        </li>
+                        <li>
+                            <span>실시간 모니터링</span>
+                            <span class="feature-status feature-locked" id="monitoring-feature">Pro 전용</span>
+                        </li>
+                        <li>
+                            <span>클라우드 백업</span>
+                            <span class="feature-status feature-locked" id="cloud-feature">Pro 전용</span>
+                        </li>
+                        <li>
+                            <span>24/7 기술지원</span>
+                            <span class="feature-status feature-locked" id="support-feature">Pro 전용</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="upgrade-btn" id="manager-upgrade-btn" onclick="showManagerUpgradeModal()">
+                        <i class="fas fa-crown" style="margin-right: 10px;"></i>
+                        Safe Pro로 업그레이드 (월 37만원)
+                    </button>
+                </div>
+
+                <!-- 디지털 체크리스트 -->
+                <div id="checklist" class="tab-content">
+                    <div class="section">
+                        <div class="section-title">📋 디지털 안전 체크리스트</div>
+                        <div class="checklist-container">
+                            <!-- 체크리스트 헤더 -->
+                            <div class="checklist-header">
+                                <div style="color: #f0f6fc; font-weight: 600; margin-bottom: 5px;">
+                                    A동 3층 일일 안전점검
+                                </div>
+                                <div style="color: #8b949e; font-size: 0.9em;">
+                                    2025년 1월 20일 (월) 14:32
+                                </div>
+                                <div class="checklist-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-number" style="color: #2ea043;" id="completed-count">0</div>
+                                        <div class="stat-label">완료</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number" style="color: #fb8500;" id="pending-count">15</div>
+                                        <div class="stat-label">대기</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-number" style="color: #58a6ff;" id="progress-percent">0%</div>
+                                        <div class="stat-label">진행률</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PPE 점검 -->
+                            <div class="checklist-section">
+                                <div class="section-header" onclick="toggleSection('ppe-section')">
+                                    <div class="section-title">
+                                        <i class="fas fa-hard-hat"></i>
+                                        개인보호구(PPE) 점검
+                                    </div>
+                                    <div class="section-progress" id="ppe-progress">0/4</div>
+                                </div>
+                                <div class="section-content" id="ppe-section">
+                                    <div class="checklist-item critical" onclick="toggleCheckItem(this, 'ppe1')">
+                                        <div class="checkbox critical" id="ppe1">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">안전모 착용 확인</div>
+                                            <div class="item-description">작업자 전원 안전모 착용 상태 점검</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'ppe2')">
+                                        <div class="checkbox" id="ppe2">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">안전화 착용 확인</div>
+                                            <div class="item-description">미끄럼 방지 및 보호 기능 확인</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'ppe3')">
+                                        <div class="checkbox" id="ppe3">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">안전조끼 착용 확인</div>
+                                            <div class="item-description">시인성 확보를 위한 안전조끼 착용</div>
+                                        </div>
+                                        <div class="item-priority priority-medium">권장</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'ppe4')">
+                                        <div class="checkbox" id="ppe4">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">안전벨트 점검</div>
+                                            <div class="item-description">고소작업 시 안전벨트 상태 확인</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 장비 점검 -->
+                            <div class="checklist-section">
+                                <div class="section-header" onclick="toggleSection('equipment-section')">
+                                    <div class="section-title">
+                                        <i class="fas fa-tools"></i>
+                                        장비 및 도구 점검
+                                    </div>
+                                    <div class="section-progress" id="equipment-progress">0/5</div>
+                                </div>
+                                <div class="section-content" id="equipment-section">
+                                    <div class="checklist-item critical" onclick="toggleCheckItem(this, 'eq1')">
+                                        <div class="checkbox critical" id="eq1">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">크레인 작동 점검</div>
+                                            <div class="item-description">유압, 브레이크, 안전장치 정상 작동 확인</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'eq2')">
+                                        <div class="checkbox" id="eq2">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">전동공구 점검</div>
+                                            <div class="item-description">절연상태, 코드 손상 여부 확인</div>
+                                        </div>
+                                        <div class="item-priority priority-medium">권장</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'eq3')">
+                                        <div class="checkbox" id="eq3">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">사다리 안전점검</div>
+                                            <div class="item-description">발판, 난간 고정상태 확인</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'eq4')">
+                                        <div class="checkbox" id="eq4">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">안전난간 설치확인</div>
+                                            <div class="item-description">작업구역 주변 안전난간 설치 상태</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'eq5')">
+                                        <div class="checkbox" id="eq5">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">화재 안전장비 점검</div>
+                                            <div class="item-description">소화기, 화재감지기 정상 작동 확인</div>
+                                        </div>
+                                        <div class="item-priority priority-medium">권장</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 환경 점검 -->
+                            <div class="checklist-section">
+                                <div class="section-header" onclick="toggleSection('environment-section')">
+                                    <div class="section-title">
+                                        <i class="fas fa-cloud-sun"></i>
+                                        작업환경 점검
+                                    </div>
+                                    <div class="section-progress" id="environment-progress">0/3</div>
+                                </div>
+                                <div class="section-content" id="environment-section">
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'env1')">
+                                        <div class="checkbox" id="env1">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">날씨 상태 확인</div>
+                                            <div class="item-description">바람, 강수량, 시정 상태 점검</div>
+                                        </div>
+                                        <div class="item-priority priority-medium">권장</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'env2')">
+                                        <div class="checkbox" id="env2">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">작업구역 정리정돈</div>
+                                            <div class="item-description">장애물 제거 및 통로 확보</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'env3')">
+                                        <div class="checkbox" id="env3">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">조명 상태 확인</div>
+                                            <div class="item-description">작업구역 적정 조도 확보</div>
+                                        </div>
+                                        <div class="item-priority priority-low">일반</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 안전교육 확인 -->
+                            <div class="checklist-section">
+                                <div class="section-header" onclick="toggleSection('education-section')">
+                                    <div class="section-title">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        안전교육 확인
+                                    </div>
+                                    <div class="section-progress" id="education-progress">0/3</div>
+                                </div>
+                                <div class="section-content" id="education-section">
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'edu1')">
+                                        <div class="checkbox" id="edu1">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">일일 안전교육 실시</div>
+                                            <div class="item-description">작업 전 안전수칙 교육 완료</div>
+                                        </div>
+                                        <div class="item-priority priority-high">필수</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'edu2')">
+                                        <div class="checkbox" id="edu2">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">신규 작업자 교육</div>
+                                            <div class="item-description">신규 투입 인력 별도 교육</div>
+                                        </div>
+                                        <div class="item-priority priority-medium">권장</div>
+                                    </div>
+                                    <div class="checklist-item" onclick="toggleCheckItem(this, 'edu3')">
+                                        <div class="checkbox" id="edu3">
+                                            <i class="fas fa-check" style="display: none;"></i>
+                                        </div>
+                                        <div class="item-content">
+                                            <div class="item-title">비상상황 대응교육</div>
+                                            <div class="item-description">화재, 응급상황 대응절차 숙지</div>
+                                        </div>
+                                        <div class="item-priority priority-low">일반</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 제출 버튼 -->
+                            <button class="submit-checklist" id="submit-btn" onclick="submitChecklist()" disabled>
+                                <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>
+                                체크리스트 제출 (필수 항목 미완료)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BIM 4D 시뮬레이션 -->
+                <div id="bim" class="tab-content">
+                    <div class="section">
+                        <div class="section-title">🏗️ BIM 4D 시뮬레이션</div>
+                        <div class="bim-container">
+                            <div class="bim-viewer">
+                                <div style="color: #8b949e; text-align: center;">
+                                    <i class="fas fa-cube" style="font-size: 3em; margin-bottom: 10px; opacity: 0.5;"></i>
+                                    <div>3D 모델 로딩 중...</div>
+                                    <div style="font-size: 0.8em; margin-top: 5px;">A동 3층 철근 작업</div>
+                                </div>
+                            </div>
+                            <div class="bim-controls">
+                                <button class="action-btn">
+                                    <i class="fas fa-play"></i> 시뮬레이션 시작
+                                </button>
+                                <button class="action-btn secondary">
+                                    <i class="fas fa-exclamation-triangle"></i> 위험요소 분석
+                                </button>
+                            </div>
+                        </div>
+                        <div class="alert-item alert-warning">
+                            <div class="alert-title">AI 위험 예측 결과</div>
+                            <div class="alert-description">
+                                ⚠️ 크레인 작업 반경 내 추락 위험 구역 3곳 감지<br>
+                                📍 A동 3층 동쪽 모서리 - 위험도: 높음<br>
+                                🛡️ 권장: 안전난간 추가 설치 필요
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR/NFC 위치추적 -->
+                <div id="tracking" class="tab-content">
+                    <div class="section">
+                        <div class="section-title">📍 QR/NFC 위치추적</div>
+                        <div class="qr-scanner hidden" id="qr-scanner">
+                            <div class="qr-viewfinder">
+                                <div style="color: #58a6ff; text-align: center;">
+                                    <i class="fas fa-camera" style="font-size: 2em; margin-bottom: 10px;"></i>
+                                    <div>QR 코드를 스캔하세요</div>
+                                </div>
+                            </div>
+                            <button class="action-btn danger" onclick="stopQRScanner()">
+                                <i class="fas fa-times"></i> 스캔 중지
+                            </button>
+                        </div>
+                        
+                        <div class="quick-actions" style="margin-bottom: 20px;">
+                            <button class="action-btn" onclick="startQRScanner()">
+                                <i class="fas fa-qrcode"></i> QR 스캔
+                            </button>
+                            <button class="action-btn secondary" onclick="activateNFC()">
+                                <i class="fas fa-wifi"></i> NFC 활성화
+                            </button>
+                        </div>
+
+                        <div class="worker-list">
+                            <div class="worker-item">
+                                <div class="worker-avatar">김</div>
+                                <div class="worker-info">
+                                    <div class="worker-name">김현수 (현장감독)</div>
+                                    <div class="worker-role">📍 A동 3층 - 2분 전</div>
+                                </div>
+                                <div class="status-indicator" style="background: #2ea043;"></div>
+                            </div>
+                            <div class="worker-item">
+                                <div class="worker-avatar">이</div>
+                                <div class="worker-info">
+                                    <div class="worker-name">이철호 (크레인기사)</div>
+                                    <div class="worker-role">📍 크레인 조종실 - 실시간</div>
+                                </div>
+                                <div class="status-indicator" style="background: #2ea043;"></div>
+                            </div>
+                            <div class="worker-item">
+                                <div class="worker-avatar">박</div>
+                                <div class="worker-info">
+                                    <div class="worker-name">박민수 (철근공)</div>
+                                    <div class="worker-role">📍 위치 미확인 - 15분 전</div>
+                                </div>
+                                <div class="status-indicator" style="background: #fb8500;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 알림 섹션 -->
+                <div id="alerts" class="tab-content">
+                <div class="section">
+                    <div class="section-title">🚨 긴급 알림</div>
+                    <div class="alert-list">
+                        <div class="alert-item alert-critical">
+                            <div class="alert-header">
+                                <div class="alert-title">PPE 미착용 감지</div>
+                                <div class="alert-time">2분 전</div>
+                            </div>
+                            <div class="alert-description">
+                                A동 3층에서 안전모 미착용 작업자 발견 (김○○)
+                            </div>
+                        </div>
+                        <div class="alert-item alert-warning">
+                            <div class="alert-header">
+                                <div class="alert-title">위험 구역 접근</div>
+                                <div class="alert-time">15분 전</div>
+                            </div>
+                            <div class="alert-description">
+                                크레인 작업 반경 내 작업자 접근 감지
+                            </div>
+                        </div>
+                        <div class="alert-item alert-info">
+                            <div class="alert-header">
+                                <div class="alert-title">일일 안전 교육</div>
+                                <div class="alert-time">1시간 전</div>
+                            </div>
+                            <div class="alert-description">
+                                오늘의 안전 교육 완료율: 85% (17/20명)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- 작업자 현황 -->
+                <div id="workers" class="tab-content">
+                <div class="section">
+                    <div class="section-title">👷 현재 작업자 현황</div>
+                    <div class="worker-list">
+                        <div class="worker-item">
+                            <div class="worker-avatar">김</div>
+                            <div class="worker-info">
+                                <div class="worker-name">김현수</div>
+                                <div class="worker-role">현장 감독</div>
+                            </div>
+                            <div class="worker-status status-green" style="background: #27ae60;"></div>
+                        </div>
+                        <div class="worker-item">
+                            <div class="worker-avatar">이</div>
+                            <div class="worker-info">
+                                <div class="worker-name">이철호</div>
+                                <div class="worker-role">크레인 기사</div>
+                            </div>
+                            <div class="worker-status status-green" style="background: #27ae60;"></div>
+                        </div>
+                        <div class="worker-item">
+                            <div class="worker-avatar">박</div>
+                            <div class="worker-info">
+                                <div class="worker-name">박민수</div>
+                                <div class="worker-role">철근공</div>
+                            </div>
+                            <div class="worker-status status-orange" style="background: #f39c12;"></div>
+                        </div>
+                        <div class="worker-item">
+                            <div class="worker-avatar">정</div>
+                            <div class="worker-info">
+                                <div class="worker-name">정우진</div>
+                                <div class="worker-role">목수</div>
+                            </div>
+                            <div class="worker-status status-green" style="background: #27ae60;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- 모니터링 -->
+                <div id="monitoring" class="tab-content">
+                <div class="section">
+                    <div class="section-title">📹 실시간 모니터링</div>
+                    <div class="tab-container">
+                        <div class="tab-header">
+                            <button class="tab-button active" onclick="switchMonitorTab('camera')">카메라</button>
+                            <button class="tab-button" onclick="switchMonitorTab('sensor')">센서</button>
+                        </div>
+                        <div id="camera-tab" class="tab-content active">
+                            <div style="background: #f8f9fa; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                                <div style="text-align: center; color: #666;">
+                                    <i class="fas fa-video" style="font-size: 3em; margin-bottom: 10px;"></i>
+                                    <div>실시간 현장 영상</div>
+                                    <div style="font-size: 0.8em;">A동 3층 - 카메라 #1</div>
+                                </div>
+                            </div>
+                            <div class="alert-item alert-info">
+                                <div class="alert-title">AI 분석 결과</div>
+                                <div class="alert-description">
+                                    현재 화면에서 감지된 위험 요소: 없음<br>
+                                    PPE 착용률: 95% (19/20명)
+                                </div>
+                            </div>
+                        </div>
+                        <div id="sensor-tab" class="tab-content">
+                            <div class="card" style="margin-bottom: 10px;">
+                                <div class="card-title">환경 센서</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                    <div>온도: <strong>22°C</strong></div>
+                                    <div>습도: <strong>65%</strong></div>
+                                    <div>소음: <strong>72dB</strong></div>
+                                    <div>먼지: <strong>35㎍/㎥</strong></div>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">장비 상태</div>
+                                <div style="margin-top: 10px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>크레인 #1</span>
+                                        <span class="status-green">정상</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>호이스트 #2</span>
+                                        <span class="status-orange">점검 필요</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>콘크리트 펌프</span>
+                                        <span class="status-green">정상</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+                <!-- 보고서 -->
+                <div id="reports" class="tab-content">
+                <div class="section">
+                    <div class="section-title">📊 안전 보고서</div>
+                    <div class="card" style="margin-bottom: 15px;">
+                        <div class="card-title">금일 현황 (12/20)</div>
+                        <div style="text-align: left; margin-top: 10px;">
+                            <div style="margin-bottom: 8px;">
+                                <span>안전 점검 완료율</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 90%;"></div>
+                                </div>
+                                <small>90% (18/20)</small>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <span>안전 교육 이수율</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 85%;"></div>
+                                </div>
+                                <small>85% (17/20)</small>
+                            </div>
+                            <div>
+                                <span>PPE 착용률</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 95%;"></div>
+                                </div>
+                                <small>95% (19/20)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="action-btn">
+                            <i class="fas fa-download"></i> 일일 보고서
+                        </button>
+                        <button class="action-btn secondary">
+                            <i class="fas fa-chart-line"></i> 주간 분석
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+                <!-- 설정 -->
+                <div id="settings" class="tab-content">
+                <div class="section">
+                    <div class="section-title">⚙️ 설정</div>
+                    <div class="worker-list">
+                        <div class="worker-item" onclick="toggleSetting('notifications')">
+                            <div style="display: flex; align-items: center; flex: 1;">
+                                <i class="fas fa-bell" style="margin-right: 12px; color: #3498db;"></i>
+                                <span>알림 설정</span>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="worker-item" onclick="toggleSetting('camera')">
+                            <div style="display: flex; align-items: center; flex: 1;">
+                                <i class="fas fa-video" style="margin-right: 12px; color: #e74c3c;"></i>
+                                <span>카메라 설정</span>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="worker-item" onclick="toggleSetting('account')">
+                            <div style="display: flex; align-items: center; flex: 1;">
+                                <i class="fas fa-user" style="margin-right: 12px; color: #27ae60;"></i>
+                                <span>계정 관리</span>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                        <div class="worker-item" onclick="toggleSetting('sync')">
+                            <div style="display: flex; align-items: center; flex: 1;">
+                                <i class="fas fa-sync" style="margin-right: 12px; color: #f39c12;"></i>
+                                <span>데이터 동기화</span>
+                            </div>
+                            <i class="fas fa-chevron-right" style="color: #ccc;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- 하단 네비게이션 (관리자) -->
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="showTab('dashboard')">
+                    <i class="fas fa-home"></i>
+                    <span>홈</span>
+                </div>
+                <div class="nav-item" onclick="showTab('checklist')">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>체크리스트</span>
+                </div>
+                <div class="nav-item" onclick="showTab('bim')">
+                    <i class="fas fa-cube"></i>
+                    <span>BIM</span>
+                </div>
+                <div class="nav-item" onclick="showTab('tracking')">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>위치추적</span>
+                </div>
+                <div class="nav-item" onclick="showTab('monitoring')">
+                    <i class="fas fa-video"></i>
+                    <span>모니터링</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작업자 앱 -->
+        <div id="worker-app" class="hidden">
+            <!-- 헤더 -->
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <span>Safe Con-BIM</span>
+                </div>
+                <div class="tagline">작업자 모드</div>
+            </div>
+
+            <!-- 상태 표시바 -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-indicator status-green" style="background: #2ea043;"></div>
+                    <i class="fas fa-wifi status-green"></i>
+                    <span>연결됨</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-indicator status-green" style="background: #2ea043;"></div>
+                    <i class="fas fa-check-circle status-green"></i>
+                    <span>출근</span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-clock status-blue"></i>
+                    <span id="worker-time">14:32</span>
+                </div>
+            </div>
+
+            <!-- 작업자 메인 콘텐츠 -->
+            <div class="main-content worker-mode">
+                <div class="card" style="margin-bottom: 30px;">
+                    <div class="card-icon">👷</div>
+                    <div class="card-title">김현수 작업자</div>
+                    <div style="color: #8b949e; margin-top: 10px;">
+                        <div>소속: A동 3층 철근팀</div>
+                        <div>출근시간: 08:00</div>
+                        <div>현재위치: A동 3층</div>
+                    </div>
+                </div>
+
+                <button class="worker-qr-btn pulse" onclick="workerQRScan()">
+                    <i class="fas fa-qrcode" style="margin-right: 10px;"></i>
+                    QR 출입 인증
+                </button>
+
+                <div class="alert-item alert-info" style="margin-top: 20px;">
+                    <div class="alert-title">오늘의 안전 알림</div>
+                    <div class="alert-description">
+                        🛡️ 안전모와 안전벨트 착용 필수<br>
+                        ⚠️ 크레인 작업구역 출입 금지<br>
+                        📚 안전교육 미이수 - 완료 필요
+                    </div>
+                </div>
+
+                <div class="quick-actions" style="margin-top: 20px;">
+                    <button class="action-btn" onclick="showSafetyEducation()">
+                        <i class="fas fa-graduation-cap"></i> 안전교육
+                    </button>
+                    <button class="action-btn secondary" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserMode = null;
+
+        // 로그인 함수
+        function loginAs(mode) {
+            currentUserMode = mode;
+            document.getElementById('login-screen').classList.add('hidden');
+            
+            if (mode === 'manager') {
+                document.getElementById('manager-app').classList.remove('hidden');
+            } else {
+                document.getElementById('worker-app').classList.remove('hidden');
+            }
+        }
+
+        // 로그아웃 함수
+        function logout() {
+            currentUserMode = null;
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('manager-app').classList.add('hidden');
+            document.getElementById('worker-app').classList.add('hidden');
+        }
+
+        // 탭 전환 함수
+        function showTab(tabName) {
+            // 모든 탭 콘텐츠 숨기기
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // 모든 네비게이션 아이템 비활성화
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // 선택된 탭 표시
+            document.getElementById(tabName).classList.add('active');
+            
+            // 해당 네비게이션 아이템 활성화
+            const targetNavIndex = ['dashboard', 'checklist', 'bim', 'tracking', 'monitoring'].indexOf(tabName);
+            if (targetNavIndex >= 0) {
+                navItems[targetNavIndex].classList.add('active');
+            }
+        }
+
+        // 음성인식 함수
+        function startVoiceRecognition() {
+            if ('speechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'ko-KR';
+                recognition.onresult = function(event) {
+                    const command = event.results[0][0].transcript;
+                    alert(`음성 명령 인식: "${command}"`);
+                    // 여기에 음성 명령 처리 로직 추가
+                };
+                recognition.start();
+            } else {
+                alert('음성인식이 지원되지 않는 브라우저입니다.');
+            }
+        }
+
+        // QR 스캐너 함수
+        function startQRScanner() {
+            document.getElementById('qr-scanner').classList.remove('hidden');
+            showTab('tracking');
+            
+            // 실제 카메라 API 사용시
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        // 카메라 스트림 처리
+                        console.log('카메라 활성화됨');
+                    })
+                    .catch(function(error) {
+                        console.error('카메라 접근 실패:', error);
+                        alert('카메라 접근 권한이 필요합니다.');
+                    });
+            }
+        }
+
+        function stopQRScanner() {
+            document.getElementById('qr-scanner').classList.add('hidden');
+        }
+
+        // NFC 활성화 함수
+        function activateNFC() {
+            if ('NDEFReader' in window) {
+                const ndef = new NDEFReader();
+                ndef.scan().then(() => {
+                    alert('NFC 스캔이 활성화되었습니다.');
+                }).catch(error => {
+                    alert('NFC가 지원되지 않거나 권한이 필요합니다.');
+                });
+            } else {
+                alert('이 디바이스에서는 NFC가 지원되지 않습니다.');
+            }
+        }
+
+        // 작업자 QR 스캔
+        function workerQRScan() {
+            alert('QR 코드 출입 인증을 시작합니다.');
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        alert('출입 인증이 완료되었습니다.');
+                    })
+                    .catch(function(error) {
+                        alert('카메라 접근 권한이 필요합니다.');
+                    });
+            }
+        }
+
+        // 안전교육 함수 (작업자용)
+        function showSafetyEducation() {
+            alert('안전교육 페이지로 이동합니다.');
+        }
+
+        // 기능 접근 확인 (관리자용)
+        let pendingFeature = null; // 업그레이드 후 실행할 기능 저장
+
+        function checkFeatureAccess(feature) {
+            const accountType = document.getElementById('manager-account-type');
+            const isBasic = accountType.classList.contains('basic');
+            
+            if (isBasic && (feature === 'bim' || feature === 'ai-prediction' || feature === 'advanced-monitoring')) {
+                // Pro 전용 기능 접근 시 비교표 표시
+                pendingFeature = feature; // 업그레이드 후 실행할 기능 저장
+                showPlanComparison();
+                
+                // 알림과 함께 업그레이드 유도
+                setTimeout(() => {
+                    alert(`🔒 ${getFeatureName(feature)} 기능은 Safe Pro 계정 전용입니다.\n\n아래 비교표를 확인하고 업그레이드해보세요!`);
+                }, 500);
+                return false;
+            }
+            
+            // 기능별 분기 (Pro 계정이거나 무료 기능)
+            switch(feature) {
+                case 'bim':
+                    if (!isBasic) {
+                        showTab('bim');
+                        showFeatureNotification('BIM 4D 시뮬레이션');
+                    }
+                    break;
+                case 'tracking':
+                    showTab('tracking');
+                    break;
+                case 'monitoring':
+                    if (!isBasic) {
+                        showTab('monitoring');
+                        showFeatureNotification('고급 실시간 모니터링');
+                    } else {
+                        showTab('monitoring'); // 기본 모니터링은 접근 가능
+                    }
+                    break;
+                default:
+                    showTab(feature);
+            }
+        }
+
+        // 비교표 표시
+        function showPlanComparison() {
+            document.getElementById('plan-comparison').classList.remove('hidden');
+            // 부드러운 스크롤로 비교표로 이동
+            setTimeout(() => {
+                document.getElementById('plan-comparison').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 100);
+        }
+
+        // 비교표 숨기기
+        function hidePlanComparison() {
+            document.getElementById('plan-comparison').classList.add('hidden');
+            pendingFeature = null; // 대기 중인 기능 초기화
+        }
+
+        // 기능 활성화 알림
+        function showFeatureNotification(featureName) {
+            // 기존 알림 제거
+            const existingNotification = document.querySelector('.upgrade-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // 새 알림 생성
+            const notification = document.createElement('div');
+            notification.className = 'upgrade-notification';
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>${featureName} 기능이 활성화되었습니다!</span>
+                </div>
+            `;
+
+            // 대시보드 상단에 삽입
+            const dashboard = document.getElementById('dashboard');
+            dashboard.insertBefore(notification, dashboard.firstChild);
+
+            // 3초 후 자동 제거
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        function getFeatureName(feature) {
+            const names = {
+                'bim': 'BIM 4D 시뮬레이션',
+                'ai-prediction': 'AI 위험 예측',
+                'advanced-monitoring': '고급 모니터링'
+            };
+            return names[feature] || feature;
+        }
+
+        // 관리자 업그레이드 모달 함수
+        function showManagerUpgradeModal() {
+            const isConfirmed = confirm(`🏗️ Safe Pro 업그레이드\n\n월 37만원으로 다음 기능을 이용하세요:\n\n✅ BIM 4D 시뮬레이션\n✅ AI 위험 예측 시스템\n✅ 실시간 모니터링\n✅ 클라우드 백업 & 보안\n✅ 24/7 기술지원\n✅ 고급 안전교육\n✅ 데이터 분석 리포트\n\n업그레이드 하시겠습니까?`);
+            
+            if (isConfirmed) {
+                // Pro 계정으로 업그레이드
+                const accountBadge = document.getElementById('manager-account-type');
+                accountBadge.innerHTML = '<i class="fas fa-crown"></i> Safe Pro 계정';
+                accountBadge.classList.remove('basic');
+                accountBadge.classList.add('pro');
+                
+                // 업그레이드 버튼 숨기기
+                document.getElementById('manager-upgrade-btn').style.display = 'none';
+                
+                // 기능 상태 업데이트
+                const lockedFeatures = document.querySelectorAll('.feature-locked');
+                lockedFeatures.forEach(feature => {
+                    feature.textContent = '포함';
+                    feature.classList.remove('feature-locked');
+                    feature.classList.add('feature-included');
+                });
+                
+                const limitedFeature = document.querySelector('.feature-limited');
+                if (limitedFeature) {
+                    limitedFeature.textContent = '포함';
+                    limitedFeature.classList.remove('feature-limited');
+                    limitedFeature.classList.add('feature-included');
+                }
+
+                // 빠른 액션 버튼의 Pro 배지 제거
+                const badges = document.querySelectorAll('#bim-badge, #monitoring-badge');
+                badges.forEach(badge => {
+                    if (badge) badge.style.display = 'none';
+                });
+                
+                // 비교표 숨기기
+                hidePlanComparison();
+                
+                // 업그레이드 완료 알림
+                alert('🎉 Safe Pro 계정으로 업그레이드 완료!\n이제 모든 고급 기능을 이용하실 수 있습니다.');
+                
+                // 대기 중인 기능이 있다면 자동 실행
+                if (pendingFeature) {
+                    setTimeout(() => {
+                        switch(pendingFeature) {
+                            case 'bim':
+                                showTab('bim');
+                                showFeatureNotification('BIM 4D 시뮬레이션이 이제 이용 가능합니다!');
+                                break;
+                            case 'ai-prediction':
+                                showTab('monitoring');
+                                showFeatureNotification('AI 위험 예측 시스템이 활성화되었습니다!');
+                                break;
+                            case 'advanced-monitoring':
+                                showTab('monitoring');
+                                showFeatureNotification('고급 실시간 모니터링이 활성화되었습니다!');
+                                break;
+                        }
+                        pendingFeature = null; // 기능 실행 후 초기화
+                    }, 1000);
+                }
+            }
+        }
+
+        // 계정 타입 토글 (데모용)
+        function toggleManagerAccountType() {
+            const accountBadge = document.getElementById('manager-account-type');
+            if (accountBadge.classList.contains('basic')) {
+                // Pro로 변경
+                accountBadge.innerHTML = '<i class="fas fa-crown"></i> Safe Pro 계정';
+                accountBadge.classList.remove('basic');
+                accountBadge.classList.add('pro');
+                document.getElementById('manager-upgrade-btn').style.display = 'none';
+            } else {
+                // Basic으로 변경
+                accountBadge.innerHTML = '<i class="fas fa-user"></i> Basic 계정';
+                accountBadge.classList.remove('pro');
+                accountBadge.classList.add('basic');
+                document.getElementById('manager-upgrade-btn').style.display = 'block';
+            }
+        }
+
+        // 디지털 체크리스트 기능들
+        let checklistData = {
+            totalItems: 15,
+            completedItems: 0,
+            criticalItems: ['ppe1', 'eq1', 'eq3', 'eq4', 'edu1'],
+            sections: {
+                'ppe': { total: 4, completed: 0 },
+                'equipment': { total: 5, completed: 0 },
+                'environment': { total: 3, completed: 0 },
+                'education': { total: 3, completed: 0 }
+            }
+        };
+
+        // 섹션 토글
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('expanded');
+        }
+
+        // 체크 항목 토글
+        function toggleCheckItem(itemElement, itemId) {
+            const checkbox = document.getElementById(itemId);
+            const checkIcon = checkbox.querySelector('i');
+            const isCompleted = checkbox.classList.contains('checked');
+
+            // 햅틱 피드백 추가
+            triggerHapticFeedback('light');
+
+            if (isCompleted) {
+                // 체크 해제
+                checkbox.classList.remove('checked');
+                checkIcon.style.display = 'none';
+                itemElement.classList.remove('completed');
+                checklistData.completedItems--;
+            } else {
+                // 체크 완료
+                checkbox.classList.add('checked');
+                checkIcon.style.display = 'block';
+                itemElement.classList.add('completed');
+                checklistData.completedItems++;
+                
+                // 완료 시 중간 강도 햅틱 피드백
+                triggerHapticFeedback('medium');
+            }
+
+            // 섹션별 진행률 업데이트
+            updateSectionProgress(itemId);
+            
+            // 전체 진행률 업데이트
+            updateOverallProgress();
+
+            // 제출 버튼 상태 업데이트
+            updateSubmitButton();
+        }
+
+        // 섹션별 진행률 업데이트
+        function updateSectionProgress(itemId) {
+            let sectionKey = '';
+            if (itemId.startsWith('ppe')) sectionKey = 'ppe';
+            else if (itemId.startsWith('eq')) sectionKey = 'equipment';
+            else if (itemId.startsWith('env')) sectionKey = 'environment';
+            else if (itemId.startsWith('edu')) sectionKey = 'education';
+
+            if (sectionKey) {
+                const sectionItems = document.querySelectorAll(`[id^="${itemId.substring(0, 3)}"]`);
+                const completedInSection = Array.from(sectionItems).filter(item => 
+                    item.classList.contains('checked')).length;
+                
+                checklistData.sections[sectionKey].completed = completedInSection;
+                
+                const progressElement = document.getElementById(`${sectionKey}-progress`);
+                if (progressElement) {
+                    progressElement.textContent = `${completedInSection}/${checklistData.sections[sectionKey].total}`;
+                }
+            }
+        }
+
+        // 전체 진행률 업데이트
+        function updateOverallProgress() {
+            document.getElementById('completed-count').textContent = checklistData.completedItems;
+            document.getElementById('pending-count').textContent = checklistData.totalItems - checklistData.completedItems;
+            
+            const progressPercent = Math.round((checklistData.completedItems / checklistData.totalItems) * 100);
+            document.getElementById('progress-percent').textContent = `${progressPercent}%`;
+        }
+
+        // 제출 버튼 상태 업데이트
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submit-btn');
+            const criticalCompleted = checklistData.criticalItems.every(id => 
+                document.getElementById(id).classList.contains('checked'));
+
+            if (criticalCompleted) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right: 8px;"></i>체크리스트 제출하기';
+                submitBtn.style.background = 'linear-gradient(135deg, #2ea043, #238636)';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>체크리스트 제출 (필수 항목 미완료)';
+                submitBtn.style.background = '#6e7681';
+            }
+        }
+
+        // 체크리스트 제출
+        function submitChecklist() {
+            const completionRate = Math.round((checklistData.completedItems / checklistData.totalItems) * 100);
+            
+            alert(`✅ 안전 체크리스트 제출 완료!\n\n완료율: ${completionRate}%\n완료 항목: ${checklistData.completedItems}/${checklistData.totalItems}\n\n제출 시간: ${new Date().toLocaleString('ko-KR')}`);
+            
+            // 성공 알림 표시
+            showFeatureNotification(`안전 체크리스트 제출 완료 (${completionRate}%)`);
+        }
+
+        // 페이지 로드 시 체크리스트 초기화
+        function initializeChecklist() {
+            // 첫 번째 섹션 자동 확장
+            document.getElementById('ppe-section').classList.add('expanded');
+            
+            // 진행률 초기화
+            updateOverallProgress();
+            updateSubmitButton();
+        }
+
+        // 모니터링 탭 전환
+        function switchMonitorTab(tabType) {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            const tabContents = document.querySelectorAll('#monitoring .tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+
+            if (tabType === 'camera') {
+                tabButtons[0].classList.add('active');
+                document.getElementById('camera-tab').classList.add('active');
+            } else {
+                tabButtons[1].classList.add('active');
+                document.getElementById('sensor-tab').classList.add('active');
+            }
+        }
+
+        // 설정 토글
+        function toggleSetting(settingType) {
+            alert(`${settingType} 설정 페이지를 구현해야 합니다.`);
+        }
+
+        // 실시간 데이터 업데이트 시뮬레이션
+        function updateDashboard() {
+            // 안전 점수 랜덤 업데이트 (85-95 사이)
+            const safetyScore = Math.floor(Math.random() * 11) + 85;
+            const safetyElement = document.querySelector('.safety-score');
+            if (safetyElement) {
+                safetyElement.textContent = safetyScore;
+                const progressBar = safetyElement.parentElement.querySelector('.progress-fill');
+                if (progressBar) {
+                    progressBar.style.width = safetyScore + '%';
+                }
+            }
+
+            // 시간 업데이트
+            const timeElements = document.querySelectorAll('#current-time, #worker-time');
+            timeElements.forEach(element => {
+                const now = new Date();
+                element.textContent = now.toLocaleTimeString('ko-KR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            });
+        }
+
+        // 3초마다 대시보드 업데이트
+        setInterval(updateDashboard, 3000);
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Safe Con-BIM 모바일 앱이 로드되었습니다.');
+            updateDashboard();
+            
+            // 로그인 화면 표시
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('manager-app').classList.add('hidden');
+            document.getElementById('worker-app').classList.add('hidden');
+            
+            // 체크리스트 초기화
+            initializeChecklist();
+            
+            // 네트워크 상태 초기 설정
+            handleNetworkChange();
+            
+            // iOS PWA 설치 가이드 표시 (iOS에서만)
+            if (isIOSDevice() && !isInStandaloneMode()) {
+                showIOSInstallGuide();
+            }
+            
+            // PWA 모드에서 실행 중일 때 상태 표시
+            if (isInStandaloneMode()) {
+                console.log('PWA 모드로 실행 중입니다.');
+                
+                // PWA 실행 알림 추가
+                setTimeout(() => {
+                    const notification = document.createElement('div');
+                    notification.className = 'upgrade-notification';
+                    notification.style.background = 'linear-gradient(135deg, #2ea043, #238636)';
+                    notification.innerHTML = `
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span>PWA 앱 모드로 실행 중입니다!</span>
+                        </div>
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    // 3초 후 제거
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 3000);
+                }, 1000);
+            }
+        });
+
+        // PWA 서비스 워커 등록 (iOS 지원 포함)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js', { scope: './' })
+                .then(function(registration) {
+                    console.log('Service Worker 등록 성공:', registration.scope);
+                    
+                    // 서비스 워커 업데이트 확인
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // 새 버전 사용 가능 알림
+                                if (confirm('새 버전이 사용 가능합니다. 업데이트하시겠습니까?')) {
+                                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    });
+                })
+                .catch(function(error) {
+                    console.log('Service Worker 등록 실패:', error);
+                });
+        }
+
+        // iOS PWA 설치 가이드 함수
+        function showIOSInstallGuide() {
+            if (isIOSDevice() && !isInStandaloneMode()) {
+                setTimeout(() => {
+                    const guide = `📱 iOS에서 앱으로 설치하기:
+
+1. Safari에서 이 페이지를 엽니다
+2. 하단의 공유 버튼 (□↗) 을 누릅니다
+3. "홈 화면에 추가"를 선택합니다
+4. "추가"를 누르면 완료됩니다
+
+설치 후 홈 화면에서 바로 실행할 수 있습니다!`;
+                    
+                    if (confirm(guide + '\n\n지금 설치 가이드를 다시 보시겠습니까?')) {
+                        showIOSInstallGuide();
+                    }
+                }, 3000);
+            }
+        }
+
+        // iOS 디바이스 확인
+        function isIOSDevice() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        // 스탠드얼론 모드 확인 (PWA로 실행 중인지)
+        function isInStandaloneMode() {
+            return window.navigator.standalone === true || 
+                   window.matchMedia('(display-mode: standalone)').matches;
+        }
+
+        // 네트워크 상태 모니터링
+        function handleNetworkChange() {
+            if (navigator.onLine) {
+                document.querySelector('.status-bar .status-item i.fa-wifi')
+                    .className = 'fas fa-wifi status-green';
+                document.querySelector('.status-bar .status-item span').textContent = '연결됨';
+                
+                // 오프라인 데이터 동기화
+                if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        return registration.sync.register('background-checklist-sync');
+                    });
+                }
+            } else {
+                document.querySelector('.status-bar .status-item i.fa-wifi')
+                    .className = 'fas fa-wifi-slash status-red';
+                document.querySelector('.status-bar .status-item span').textContent = '오프라인';
+            }
+        }
+
+        // 네트워크 이벤트 리스너
+        window.addEventListener('online', handleNetworkChange);
+        window.addEventListener('offline', handleNetworkChange);
+
+        // iOS 상태바 색상 동적 변경
+        function updateStatusBarColor(isDark = true) {
+            const statusBarMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+            if (statusBarMeta) {
+                statusBarMeta.content = isDark ? 'black-translucent' : 'default';
+            }
+        }
+
+        // 햅틱 피드백 (iOS 지원)
+        function triggerHapticFeedback(type = 'light') {
+            if (window.navigator && window.navigator.vibrate) {
+                switch(type) {
+                    case 'light':
+                        window.navigator.vibrate(10);
+                        break;
+                    case 'medium':
+                        window.navigator.vibrate(20);
+                        break;
+                    case 'heavy':
+                        window.navigator.vibrate(30);
+                        break;
+                }
+            }
+        }
+    </script>
+</body>
+</html> 
