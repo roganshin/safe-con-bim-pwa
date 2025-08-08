@@ -559,6 +559,15 @@
             justify-content: center;
         }
 
+        .qr-video {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
         .qr-viewfinder::before {
             content: '';
             position: absolute;
@@ -1507,10 +1516,9 @@
                         <div class="section-title">📍 QR/NFC 위치추적</div>
                         <div class="qr-scanner hidden" id="qr-scanner">
                             <div class="qr-viewfinder">
-                                <div style="color: #58a6ff; text-align: center;">
-                                    <i class="fas fa-camera" style="font-size: 2em; margin-bottom: 10px;"></i>
-                                    <div>QR 코드를 스캔하세요</div>
-                                </div>
+                                <video id="qr-video" class="qr-video" autoplay playsinline muted></video>
+                                <canvas id="qr-canvas" class="hidden"></canvas>
+                                <div id="qr-overlay" style="position:absolute;bottom:8px;left:0;right:0;text-align:center;color:#58a6ff;font-size:0.9em;">QR 코드를 스캔하세요</div>
                             </div>
                             <button class="action-btn danger" onclick="stopQRScanner()">
                                 <i class="fas fa-times"></i> 스캔 중지
@@ -2018,41 +2026,86 @@
 
         // 음성인식 함수
         function startVoiceRecognition() {
-            if ('speechRecognition' in window || 'webkitSpeechRecognition' in window) {
-                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            // iOS Safari는 webkitSpeechRecognition 미지원. 대안: MediaRecorder로 음성 캡처 후 서버 인식(추후)
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const Recog = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new Recog();
                 recognition.lang = 'ko-KR';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
                 recognition.onresult = function(event) {
                     const command = event.results[0][0].transcript;
                     alert(`음성 명령 인식: "${command}"`);
-                    // 여기에 음성 명령 처리 로직 추가
+                };
+                recognition.onerror = function(e){
+                    console.warn('음성인식 오류', e.error);
+                    alert('음성인식 중 오류가 발생했습니다.');
                 };
                 recognition.start();
+            } else if (navigator.mediaDevices?.getUserMedia) {
+                // 폴백: 마이크 권한 캡처만(향후 서버 STT 연동)
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        // 마이크 권한 확인만 수행
+                        stream.getTracks().forEach(t => t.stop());
+                        alert('마이크 권한이 확인되었습니다. (iOS는 브라우저 STT 미지원)');
+                    })
+                    .catch(err => {
+                        console.error('마이크 권한 실패:', err);
+                        alert('마이크 접근 권한이 필요합니다. 설정에서 허용해주세요.');
+                    });
             } else {
-                alert('음성인식이 지원되지 않는 브라우저입니다.');
+                alert('이 브라우저에서는 음성 기능이 지원되지 않습니다.');
             }
         }
 
         // QR 스캐너 함수
+        let qrMediaStream = null;
         function startQRScanner() {
             document.getElementById('qr-scanner').classList.remove('hidden');
             showTab('tracking');
+            const videoEl = document.getElementById('qr-video');
             
-            // 실제 카메라 API 사용시
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
+            if (navigator.mediaDevices?.getUserMedia) {
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: false
+                };
+                navigator.mediaDevices.getUserMedia(constraints)
                     .then(function(stream) {
-                        // 카메라 스트림 처리
+                        qrMediaStream = stream;
+                        if ('srcObject' in videoEl) {
+                            videoEl.srcObject = stream;
+                        } else {
+                            videoEl.src = window.URL.createObjectURL(stream);
+                        }
+                        videoEl.play();
                         console.log('카메라 활성화됨');
                     })
                     .catch(function(error) {
                         console.error('카메라 접근 실패:', error);
-                        alert('카메라 접근 권한이 필요합니다.');
+                        alert('카메라 접근 권한이 필요합니다. 설정에서 권한을 허용해주세요.');
                     });
+            } else {
+                alert('이 브라우저에서는 카메라가 지원되지 않습니다.');
             }
         }
 
         function stopQRScanner() {
             document.getElementById('qr-scanner').classList.add('hidden');
+            const videoEl = document.getElementById('qr-video');
+            if (qrMediaStream) {
+                qrMediaStream.getTracks().forEach(t => t.stop());
+                qrMediaStream = null;
+            }
+            if (videoEl) {
+                videoEl.pause();
+                if ('srcObject' in videoEl) videoEl.srcObject = null;
+            }
         }
 
         // NFC 활성화 함수
@@ -2517,6 +2570,16 @@
                 .catch(function(error) {
                     console.log('Service Worker 등록 실패:', error);
                 });
+        }
+
+        // iOS PWA 카메라/마이크 권한 안내(사파리에서 최초 클릭 시 권한 팝업 발생)
+        function requestCameraPermissionOnce() {
+            if (!navigator.mediaDevices?.getUserMedia) return;
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    stream.getTracks().forEach(t => t.stop());
+                })
+                .catch(() => {});
         }
 
         // iOS PWA 설치 가이드 함수
