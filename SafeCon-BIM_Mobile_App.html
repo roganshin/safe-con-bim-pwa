@@ -25,6 +25,7 @@
     <meta name="msapplication-TileImage" content="./logo.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <!-- 소셜 로그인 SDK (필요 시 활성화) -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
@@ -2077,6 +2078,7 @@
 
         // QR 스캐너 함수
         let qrMediaStream = null;
+        let qrScanTimer = null;
         function startQRScanner() {
             document.getElementById('qr-scanner').classList.remove('hidden');
             showTab('tracking');
@@ -2101,6 +2103,32 @@
                         }
                         videoEl.play();
                         console.log('카메라 활성화됨');
+
+                        // jsQR로 주기적 스캔
+                        const canvas = document.getElementById('qr-canvas');
+                        const ctx = canvas.getContext('2d');
+                        const overlay = document.getElementById('qr-overlay');
+
+                        const scan = () => {
+                            if (!videoEl.videoWidth) {
+                                qrScanTimer = requestAnimationFrame(scan);
+                                return;
+                            }
+                            canvas.width = videoEl.videoWidth;
+                            canvas.height = videoEl.videoHeight;
+                            ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(imageData.data, canvas.width, canvas.height);
+                            if (code && code.data) {
+                                overlay.textContent = `QR 인식: ${code.data}`;
+                                triggerHapticFeedback('medium');
+                                // 필요 시 인증/라우팅 로직 연결
+                            } else {
+                                overlay.textContent = 'QR 코드를 스캔하세요';
+                            }
+                            qrScanTimer = requestAnimationFrame(scan);
+                        };
+                        scan();
                     })
                     .catch(function(error) {
                         console.error('카메라 접근 실패:', error);
@@ -2117,6 +2145,10 @@
             if (qrMediaStream) {
                 qrMediaStream.getTracks().forEach(t => t.stop());
                 qrMediaStream = null;
+            }
+            if (qrScanTimer) {
+                cancelAnimationFrame(qrScanTimer);
+                qrScanTimer = null;
             }
             if (videoEl) {
                 videoEl.pause();
