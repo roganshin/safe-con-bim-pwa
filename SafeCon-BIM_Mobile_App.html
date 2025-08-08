@@ -12,20 +12,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Safe Con-BIM">
     
-    <!-- iOS 아이콘 설정 -->
-    <link rel="apple-touch-icon" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="57x57" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="./logo.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="./logo.png">
+    <!-- iOS 아이콘 설정 (실제 PNG) -->
+    <link rel="apple-touch-icon" href="./icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icon-180x180.png">
     
     <!-- iOS 스플래시 스크린 -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <link rel="apple-touch-startup-image" href="./logo.png">
+    <link rel="apple-touch-startup-image" href="./icon-180x180.png">
     
     <!-- Microsoft Tiles -->
     <meta name="msapplication-TileColor" content="#0d1117">
@@ -1032,6 +1025,21 @@
         .hidden {
             display: none !important;
         }
+
+        /* 설치 안내 모달 */
+        .install-modal {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            background: rgba(13,17,23,0.98);
+            border-top: 1px solid #21262d;
+            padding: 16px;
+            z-index: 9999;
+        }
+        .install-modal .title { color: #f0f6fc; font-weight: 700; margin-bottom: 8px; }
+        .install-modal .desc { color: #8b949e; font-size: 0.9em; line-height: 1.4; }
+        .install-modal .row { display:flex; justify-content: space-between; align-items:center; margin-top: 10px; }
+        .install-modal .btn { background: #238636; color: white; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 600; }
+        .install-modal .close { background: #6e7681; }
     </style>
 </head>
 <body>
@@ -1068,6 +1076,22 @@
                     <i class="fas fa-user-tie"></i>
                     <span>관리자 모드</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- iOS 설치 안내 모달 -->
+        <div id="install-modal" class="install-modal hidden">
+            <div class="title">홈 화면에 추가</div>
+            <div class="desc">
+                iPhone에서 앱으로 사용하려면 Safari에서 이 페이지를 연 뒤<br>
+                하단의 공유 버튼(□↗) → "홈 화면에 추가"를 선택하세요.
+            </div>
+            <div class="row">
+                <small style="color:#8b949e;">Safari 전용 · 첫 실행은 네트워크 필요</small>
+                <div>
+                    <button class="btn close" onclick="hideInstallModal()">나중에</button>
+                    <button class="btn" onclick="ackInstallGuide()">확인</button>
+                </div>
             </div>
         </div>
 
@@ -2498,27 +2522,18 @@
 
         // iOS PWA 설치 가이드 함수
         function showIOSInstallGuide() {
-            if (isIOSDevice() && !isInStandaloneMode()) {
-                setTimeout(() => {
-                    const guide = `📱 iOS에서 앱으로 설치하기:
-
-1. ✅ Safari 브라우저 확인 (Chrome 등 다른 브라우저 안됨)
-2. 📱 화면 하단 공유 버튼 (□↗) 터치
-3. 📋 아래로 스크롤하여 "홈 화면에 추가" 선택
-4. ➕ "추가" 버튼 터치하여 설치 완료
-
-❗ 옵션이 안 보이면:
-- 페이지 새로고침 후 다시 시도
-- Safari 설정 → JavaScript 활성화 확인
-- WiFi 연결 확인
-
-설치 후 홈 화면 아이콘으로 앱 실행 가능!`;
-                    
-                    if (confirm(guide + '\n\n🔄 다시 설치 가이드를 보시겠습니까?')) {
-                        showIOSInstallGuide();
-                    }
-                }, 2000);
+            if (isIOSDevice() && !isInStandaloneMode() && !localStorage.getItem('installGuideAck')) {
+                const modal = document.getElementById('install-modal');
+                modal.classList.remove('hidden');
             }
+        }
+
+        function hideInstallModal(){
+            document.getElementById('install-modal').classList.add('hidden');
+        }
+        function ackInstallGuide(){
+            localStorage.setItem('installGuideAck', '1');
+            hideInstallModal();
         }
 
         // iOS 디바이스 확인

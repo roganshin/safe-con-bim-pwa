@@ -1,12 +1,15 @@
-const CACHE_NAME = 'safe-con-bim-cache-v2';
-const STATIC_CACHE = 'static-cache-v2';
-const DYNAMIC_CACHE = 'dynamic-cache-v2';
+const CACHE_NAME = 'safe-con-bim-cache-v3';
+const STATIC_CACHE = 'static-cache-v3';
+const DYNAMIC_CACHE = 'dynamic-cache-v3';
 
 const URLS_TO_CACHE = [
   './',
   './SafeCon-BIM_Mobile_App.html',
   './manifest.json',
-  './logo.png',
+  './icon-180x180.png',
+  './icon-192x192.png',
+  './icon-384x384.png',
+  './icon-512x512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
