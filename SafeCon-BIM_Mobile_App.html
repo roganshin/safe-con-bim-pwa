@@ -32,6 +32,9 @@
     <meta name="msapplication-TileImage" content="./logo.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 소셜 로그인 SDK (필요 시 활성화) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://developers.kakao.com/sdk/js/kakao.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -98,6 +101,54 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+        }
+
+        /* 소셜 로그인 */
+        .social-login {
+            width: 100%;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 10px 0 20px;
+        }
+
+        .social-btn {
+            padding: 14px 16px;
+            border: 1px solid #21262d;
+            border-radius: 10px;
+            background: #161b22;
+            color: #f0f6fc;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .social-btn:hover { border-color: #30363d; }
+        .social-btn.google { border-color: #4285F4; }
+        .social-btn.apple { border-color: #ffffff22; }
+        .social-btn.kakao { border-color: #FEE500; color: #111; background: #FEE500; }
+        .social-btn.naver { border-color: #03C75A; }
+
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8b949e;
+            font-size: 0.85em;
+            margin: 10px 0 0;
+        }
+        .login-divider::before,
+        .login-divider::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #21262d;
         }
 
         .role-btn {
@@ -990,6 +1041,24 @@
             <div class="login-logo"></div>
             <div class="login-title">Safe Con-BIM</div>
             <div class="login-subtitle">Building Safety Before Building</div>
+            
+            <!-- 소셜 로그인 -->
+            <div class="social-login">
+                <button class="social-btn apple" onclick="handleSocialLogin('apple')">
+                    <i class="fab fa-apple"></i> Apple로 계속
+                </button>
+                <button class="social-btn google" onclick="handleSocialLogin('google')">
+                    <i class="fab fa-google"></i> Google로 계속
+                </button>
+                <button class="social-btn kakao" onclick="handleSocialLogin('kakao')">
+                    <i class="fas fa-comment"></i> 카카오로 계속
+                </button>
+                <button class="social-btn naver" onclick="handleSocialLogin('naver')">
+                    <i class="fas fa-leaf"></i> 네이버로 계속
+                </button>
+            </div>
+
+            <div class="login-divider">또는 역할 선택</div>
             <div class="role-buttons">
                 <button class="role-btn worker" onclick="loginAs('worker')">
                     <i class="fas fa-hard-hat"></i>
@@ -1770,6 +1839,115 @@
 
     <script>
         let currentUserMode = null;
+        let currentUser = null; // 소셜 로그인 사용자 정보
+
+        // 소셜 로그인 설정 (필요시 실제 키로 교체)
+        const SOCIAL_AUTH_CONFIG = {
+            demoMode: true, // 실제 키 설정 전까지 데모 로그인 사용
+            googleClientId: '', // 예: 'xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com'
+            kakaoJavaScriptKey: '', // 예: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+            naverClientId: '', // 예: 'xxxxxxxxxxxxxxxx'
+            naverCallbackUrl: location.origin + location.pathname.replace(/[^/]+$/, '') + 'naver-callback.html',
+            appleClientId: '', // 예: 'com.example.web'
+            appleRedirectURI: location.origin + location.pathname
+        };
+
+        function initializeSocialAuth() {
+            try {
+                // Google
+                if (!SOCIAL_AUTH_CONFIG.demoMode && SOCIAL_AUTH_CONFIG.googleClientId && window.google && google.accounts?.id) {
+                    google.accounts.id.initialize({
+                        client_id: SOCIAL_AUTH_CONFIG.googleClientId,
+                        callback: (response) => {
+                            // ID 토큰 파싱은 백엔드 검증 권장. 여기선 데모로 프로필 최소화 저장
+                            afterLogin({
+                                provider: 'google',
+                                name: 'Google 사용자',
+                                email: '',
+                                picture: ''
+                            });
+                        }
+                    });
+                }
+
+                // Kakao
+                if (!SOCIAL_AUTH_CONFIG.demoMode && SOCIAL_AUTH_CONFIG.kakaoJavaScriptKey && window.Kakao && !Kakao.isInitialized()) {
+                    Kakao.init(SOCIAL_AUTH_CONFIG.kakaoJavaScriptKey);
+                }
+            } catch(e) {
+                console.warn('소셜 로그인 초기화 경고:', e);
+            }
+        }
+
+        function handleSocialLogin(provider) {
+            if (SOCIAL_AUTH_CONFIG.demoMode) {
+                // 데모 모드: 즉시 로그인 처리
+                const demoProfiles = {
+                    apple:  { provider: 'apple',  name: 'Apple 사용자',  email: 'apple@example.com' },
+                    google: { provider: 'google', name: 'Google 사용자', email: 'google@example.com' },
+                    kakao:  { provider: 'kakao',  name: '카카오 사용자',  email: 'kakao@example.com' },
+                    naver:  { provider: 'naver',  name: '네이버 사용자',  email: 'naver@example.com' }
+                };
+                afterLogin(demoProfiles[provider] || { provider, name: '사용자', email: '' });
+                return;
+            }
+
+            switch(provider) {
+                case 'google':
+                    if (window.google && google.accounts?.id) {
+                        google.accounts.id.prompt();
+                    } else {
+                        alert('Google 설정이 필요합니다. CLIENT_ID를 설정하세요.');
+                    }
+                    break;
+                case 'kakao':
+                    if (window.Kakao && Kakao.isInitialized()) {
+                        Kakao.Auth.login({
+                            success: function() {
+                                Kakao.API.request({ url: '/v2/user/me', success: function(res){
+                                    afterLogin({ provider: 'kakao', name: res.kakao_account?.profile?.nickname || '카카오 사용자' });
+                                }});
+                            },
+                            fail: function(err){ alert('카카오 로그인 실패: ' + JSON.stringify(err)); }
+                        });
+                    } else {
+                        alert('Kakao 설정이 필요합니다. JavaScript Key를 설정하세요.');
+                    }
+                    break;
+                case 'naver':
+                    if (SOCIAL_AUTH_CONFIG.naverClientId) {
+                        const state = Math.random().toString(36).slice(2);
+                        const url = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${SOCIAL_AUTH_CONFIG.naverClientId}&redirect_uri=${encodeURIComponent(SOCIAL_AUTH_CONFIG.naverCallbackUrl)}&state=${state}`;
+                        window.open(url, 'naverLogin', 'width=480,height=640');
+                        window.addEventListener('message', (e) => {
+                            if (e.data && e.data.type === 'NAVER_LOGIN_SUCCESS') {
+                                afterLogin({ provider: 'naver', name: e.data.name || '네이버 사용자' });
+                            }
+                        }, { once: true });
+                    } else {
+                        alert('Naver 설정이 필요합니다. Client ID와 Callback URL을 설정하세요.');
+                    }
+                    break;
+                case 'apple':
+                    alert('Apple 로그인은 설정이 필요합니다. (Apple Developer 설정)');
+                    break;
+            }
+        }
+
+        function afterLogin(user) {
+            currentUser = user;
+            localStorage.setItem('safecon_user', JSON.stringify(user));
+            updateLoginUI();
+            // 로그인 후 역할 선택 유도 (기존 버튼 사용)
+            alert(`${user.name || '사용자'}님, 소셜 로그인되었습니다. 역할을 선택하세요.`);
+        }
+
+        function updateLoginUI() {
+            const subtitle = document.querySelector('.login-subtitle');
+            if (currentUser && subtitle) {
+                subtitle.textContent = `${currentUser.name || '사용자'}님 로그인됨 (${currentUser.provider})`;
+            }
+        }
 
         // 로그인 함수
         function loginAs(mode) {
@@ -2254,6 +2432,9 @@
             // 체크리스트 초기화
             initializeChecklist();
             
+            // 소셜 로그인 초기화
+            initializeSocialAuth();
+            
             // 네트워크 상태 초기 설정
             handleNetworkChange();
             
@@ -2321,17 +2502,22 @@
                 setTimeout(() => {
                     const guide = `📱 iOS에서 앱으로 설치하기:
 
-1. Safari에서 이 페이지를 엽니다
-2. 하단의 공유 버튼 (□↗) 을 누릅니다
-3. "홈 화면에 추가"를 선택합니다
-4. "추가"를 누르면 완료됩니다
+1. ✅ Safari 브라우저 확인 (Chrome 등 다른 브라우저 안됨)
+2. 📱 화면 하단 공유 버튼 (□↗) 터치
+3. 📋 아래로 스크롤하여 "홈 화면에 추가" 선택
+4. ➕ "추가" 버튼 터치하여 설치 완료
 
-설치 후 홈 화면에서 바로 실행할 수 있습니다!`;
+❗ 옵션이 안 보이면:
+- 페이지 새로고침 후 다시 시도
+- Safari 설정 → JavaScript 활성화 확인
+- WiFi 연결 확인
+
+설치 후 홈 화면 아이콘으로 앱 실행 가능!`;
                     
-                    if (confirm(guide + '\n\n지금 설치 가이드를 다시 보시겠습니까?')) {
+                    if (confirm(guide + '\n\n🔄 다시 설치 가이드를 보시겠습니까?')) {
                         showIOSInstallGuide();
                     }
-                }, 3000);
+                }, 2000);
             }
         }
 
