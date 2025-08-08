@@ -61,7 +61,7 @@
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            padding: 28px 20px 20px;
+            padding: 28px 20px calc(20px + env(safe-area-inset-bottom));
         }
 
         .login-content {
@@ -155,6 +155,7 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
+            width: 100%;
         }
 
         .role-btn:hover {
@@ -1046,15 +1047,26 @@
         .install-modal .row { display:flex; justify-content: space-between; align-items:center; margin-top: 10px; }
         .install-modal .btn { background: #238636; color: white; border: 0; border-radius: 8px; padding: 8px 12px; font-weight: 600; }
         .install-modal .close { background: #6e7681; }
+
+        /* 음성 폴백 UI */
+        .mic-fallback {
+            display: none;
+            margin-top: 10px;
+            color: #8b949e;
+            font-size: 0.9em;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- 로그인 화면 -->
         <div id="login-screen" class="login-screen">
-            <div class="login-logo"></div>
-            <div class="login-title">Safe Con-BIM</div>
-            <div class="login-subtitle">Building Safety Before Building</div>
+            <div class="login-content">
+                <div class="login-logo"></div>
+                <div class="login-title">Safe Con-BIM</div>
+                <div class="login-subtitle">Building Safety Before Building</div>
+            </div>
             
             <div class="login-content">
                 <div class="login-divider">역할 선택</div>
@@ -1116,9 +1128,12 @@
                 </div>
                 <div class="tagline">Building Safety Before Building</div>
                 <div class="header-controls">
-                    <button class="voice-btn" onclick="startVoiceRecognition()">
-                        <i class="fas fa-microphone"></i> 음성인식
-                    </button>
+                    <div>
+                        <button class="voice-btn" onclick="startVoiceRecognition()">
+                            <i class="fas fa-microphone"></i> 음성인식
+                        </button>
+                        <div id="mic-fallback" class="mic-fallback">iOS에서는 음성인식 미지원, 마이크 권한만 확인합니다</div>
+                    </div>
                     <button class="qr-btn" onclick="startQRScanner()">
                         <i class="fas fa-qrcode"></i> QR스캔
                     </button>
@@ -2048,7 +2063,8 @@
                     .then(stream => {
                         // 마이크 권한 확인만 수행
                         stream.getTracks().forEach(t => t.stop());
-                        alert('마이크 권한이 확인되었습니다. (iOS는 브라우저 STT 미지원)');
+                        const el = document.getElementById('mic-fallback');
+                        if (el) el.style.display = 'block';
                     })
                     .catch(err => {
                         console.error('마이크 권한 실패:', err);
