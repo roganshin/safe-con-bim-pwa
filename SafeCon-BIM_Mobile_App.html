@@ -57,11 +57,29 @@
         .login-screen {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             min-height: 100vh;
             background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            padding: 20px;
+            padding: 28px 20px 20px;
+        }
+
+        .login-content {
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .login-bottom {
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0 6px;
         }
 
         .login-logo {
@@ -90,70 +108,49 @@
 
         .role-buttons {
             width: 100%;
-            max-width: 300px;
+            max-width: 360px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 16px;
+            margin-top: 8px;
         }
 
-        /* 소셜 로그인 */
-        .social-login {
-            width: 100%;
-            max-width: 320px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin: 10px 0 20px;
-        }
-
-        .social-btn {
-            padding: 14px 16px;
-            border: 1px solid #21262d;
-            border-radius: 10px;
-            background: #161b22;
-            color: #f0f6fc;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        /* 소셜 로그인 - 하단 원형 아이콘, 가로 배치 */
+        .social-login-row {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 14px;
         }
-
-        .social-btn:hover { border-color: #30363d; }
-        .social-btn.google { border-color: #4285F4; }
-        .social-btn.apple { border-color: #ffffff22; }
-        .social-btn.kakao { border-color: #FEE500; color: #111; background: #FEE500; }
-        .social-btn.naver { border-color: #03C75A; }
-
-        .login-divider {
+        .social-icon-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid #21262d;
+            background: #161b22;
+            color: #f0f6fc;
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #8b949e;
-            font-size: 0.85em;
-            margin: 10px 0 0;
+            justify-content: center;
+            font-size: 1.3em;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
-        .login-divider::before,
-        .login-divider::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: #21262d;
-        }
+        .social-icon-btn:hover { transform: translateY(-1px); border-color: #30363d; box-shadow: 0 6px 12px rgba(0,0,0,0.25); }
+        .social-icon-btn.apple { background: #000; color: #fff; border-color: #000; }
+        .social-icon-btn.google { background: #fff; color: #000; border-color: #e0e0e0; }
+        .social-icon-btn.kakao { background: #FEE500; color: #111; border-color: #FEE500; }
+        .social-icon-btn.naver { background: #03C75A; color: #fff; border-color: #03C75A; }
 
         .role-btn {
-            padding: 18px 24px;
+            padding: 22px 24px;
             border: 2px solid #21262d;
-            border-radius: 12px;
+            border-radius: 8px; /* 네모형식 */
             background: linear-gradient(135deg, #161b22 0%, #0d1117 100%);
             color: #f0f6fc;
-            font-size: 1.1em;
-            font-weight: 600;
+            font-size: 1.15em;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1050,23 +1047,9 @@
             <div class="login-title">Safe Con-BIM</div>
             <div class="login-subtitle">Building Safety Before Building</div>
             
-            <!-- 소셜 로그인 -->
-            <div class="social-login">
-                <button class="social-btn apple" onclick="handleSocialLogin('apple')">
-                    <i class="fab fa-apple"></i> Apple로 계속
-                </button>
-                <button class="social-btn google" onclick="handleSocialLogin('google')">
-                    <i class="fab fa-google"></i> Google로 계속
-                </button>
-                <button class="social-btn kakao" onclick="handleSocialLogin('kakao')">
-                    <i class="fas fa-comment"></i> 카카오로 계속
-                </button>
-                <button class="social-btn naver" onclick="handleSocialLogin('naver')">
-                    <i class="fas fa-leaf"></i> 네이버로 계속
-                </button>
+            <div class="login-content">
+                <div class="login-divider">역할 선택</div>
             </div>
-
-            <div class="login-divider">또는 역할 선택</div>
             <div class="role-buttons">
                 <button class="role-btn worker" onclick="loginAs('worker')">
                     <i class="fas fa-hard-hat"></i>
@@ -1076,6 +1059,22 @@
                     <i class="fas fa-user-tie"></i>
                     <span>관리자 모드</span>
                 </button>
+            </div>
+            <div class="login-bottom">
+                <div class="social-login-row">
+                    <button class="social-icon-btn apple" onclick="handleSocialLogin('apple')" title="Apple">
+                        <i class="fab fa-apple"></i>
+                    </button>
+                    <button class="social-icon-btn google" onclick="handleSocialLogin('google')" title="Google">
+                        <i class="fab fa-google"></i>
+                    </button>
+                    <button class="social-icon-btn kakao" onclick="handleSocialLogin('kakao')" title="Kakao">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                    <button class="social-icon-btn naver" onclick="handleSocialLogin('naver')" title="Naver">
+                        <i class="fas fa-leaf"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
